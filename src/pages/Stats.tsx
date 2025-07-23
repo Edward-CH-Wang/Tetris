@@ -16,7 +16,8 @@ import {
   Activity,
   Zap,
   Crown,
-  Medal
+  Medal,
+  User
 } from 'lucide-react';
 import { 
   LineChart, 
@@ -42,7 +43,8 @@ const Stats: React.FC = () => {
     currentUser, 
     gameRecords, 
     userStats, 
-    achievements
+    achievements,
+    isLoading
   } = useUserStore();
 
   // 如果未登入，重定向到登入頁面
@@ -521,8 +523,36 @@ const Stats: React.FC = () => {
     );
   };
 
+  // 顯示載入狀態
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-indigo-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-white text-lg">載入中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 如果未認證，顯示未登入狀態
   if (!isAuthenticated || !currentUser) {
-    return null;
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-indigo-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+            <User className="w-8 h-8 text-gray-400" />
+          </div>
+          <p className="text-white text-lg mb-4">請先登入以查看個人統計</p>
+          <button
+            onClick={() => navigate('/login')}
+            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+          >
+            前往登入
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (

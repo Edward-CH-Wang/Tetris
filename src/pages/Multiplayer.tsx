@@ -77,13 +77,16 @@ const Multiplayer: React.FC = () => {
     if (!isConnected && connectionStatus === 'disconnected') {
       connect();
     }
-    
+  }, [isAuthenticated, isConnected, connectionStatus, connect, navigate]);
+
+  // 組件卸載時離開房間
+  useEffect(() => {
     return () => {
       if (gameState.room) {
         leaveRoom();
       }
     };
-  }, [isAuthenticated, isConnected, connectionStatus, connect, navigate, gameState.room, leaveRoom]);
+  }, []);
 
   // 監聽連接錯誤
   useEffect(() => {
@@ -157,8 +160,16 @@ const Multiplayer: React.FC = () => {
   };
 
   const handleToggleReady = () => {
+    console.log('準備按鈕點擊 - 當前狀態:', {
+      currentPlayer: gameState.currentPlayer,
+      room: gameState.room,
+      isReady: gameState.currentPlayer?.isReady
+    });
+    
     if (gameState.currentPlayer) {
-      setReady(!gameState.currentPlayer.isReady);
+      const newReadyState = !gameState.currentPlayer.isReady;
+      console.log('設置準備狀態為:', newReadyState);
+      setReady(newReadyState);
     }
   };
 

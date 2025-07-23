@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { io, Socket } from 'socket.io-client';
-import { User } from './userStore';
-import { GameState } from './gameStore';
+import { User, useUserStore } from './userStore';
+import { GameState, useGameStore } from './gameStore';
 
 export interface Room {
   id: string;
@@ -113,8 +113,9 @@ export const useMultiplayerStore = create<MultiplayerStore>((set, get) => ({
 
     set({ connectionStatus: 'connecting' });
     
-    // 在實際部署時，這裡應該是你的Socket.io服務器地址
-    const newSocket = io('ws://localhost:3001', {
+    // 使用環境變數配置Socket.io服務器地址
+    const socketUrl = import.meta.env.VITE_SOCKET_URL || 'ws://localhost:3001';
+    const newSocket = io(socketUrl, {
       transports: ['websocket'],
       timeout: 5000
     });
@@ -149,10 +150,14 @@ export const useMultiplayerStore = create<MultiplayerStore>((set, get) => ({
     // 房間事件
     newSocket.on('room_created', (room: Room) => {
       console.log('房間創建成功:', room);
+      const { user } = useUserStore.getState();
+      const currentPlayer = room.players.find(p => p.user.id === user?.id);
       set(state => ({
         gameState: {
           ...state.gameState,
-          room
+          room,
+          currentPlayer: currentPlayer || null,
+          opponent: room.players.find(p => p.user.id !== user?.id) || null
         }
       }));
     });
@@ -170,15 +175,31 @@ export const useMultiplayerStore = create<MultiplayerStore>((set, get) => ({
     });
 
     newSocket.on('room_left', () => {
-      console.log('離開房間');
-      set(state => ({
-        gameState: {
-          ...state.gameState,
-          room: null,
-          currentPlayer: null,
-          opponent: null
-        }
-      }));
+      console.log('🚨 收到 room_left 事件 - 這會導致頁面跳轉!');
+      console.log('調用堆棧:', new Error().stack);
+      set(state => {
+        console.log('room_left 事件處理前的狀態:', {
+          hasRoom: !!state.gameState.room,
+          roomId: state.gameState.room?.id,
+          currentPlayer: state.gameState.currentPlayer?.user.name
+        });
+        
+        const newState = {
+          gameState: {
+            ...state.gameState,
+            room: null,
+            currentPlayer: null,
+            opponent: null
+          }
+        };
+        
+        console.log('room_left 事件處理後的狀態:', {
+          hasRoom: !!newState.gameState.room,
+          roomId: newState.gameState.room?.id
+        });
+        
+        return newState;
+      });
     });
 
     newSocket.on('player_joined', (player: Player) => {
@@ -202,20 +223,41 @@ export const useMultiplayerStore = create<MultiplayerStore>((set, get) => ({
     });
 
     newSocket.on('player_left', (playerId: string) => {
-      console.log('玩家離開:', playerId);
+      console.log('收到玩家離開事件:', playerId);
       set(state => {
-        if (!state.gameState.room) return state;
+        console.log('處理玩家離開前的狀態:', {
+          hasRoom: !!state.gameState.room,
+          roomId: state.gameState.room?.id,
+          players: state.gameState.room?.players?.map(p => ({ id: p.id, name: p.user.name }))
+        });
+        
+        if (!state.gameState.room) {
+          console.log('警告: 沒有房間狀態，忽略玩家離開事件');
+          return state;
+        }
+        
+        const leavingPlayer = state.gameState.room.players.find(p => p.id === playerId);
+        console.log('離開的玩家:', leavingPlayer?.user.name);
         
         const updatedRoom = {
           ...state.gameState.room,
           players: state.gameState.room.players.filter(p => p.id !== playerId)
         };
         
+        console.log('玩家離開後的房間狀態:', {
+          roomId: updatedRoom.id,
+          remainingPlayers: updatedRoom.players.map(p => p.user.name)
+        });
+        
+        // 重新設置對手
+        const { currentUser } = useUserStore.getState();
+        const newOpponent = updatedRoom.players.find(p => p.user.id !== currentUser?.id) || null;
+        
         return {
           gameState: {
             ...state.gameState,
             room: updatedRoom,
-            opponent: null
+            opponent: newOpponent
           }
         };
       });
@@ -224,10 +266,22 @@ export const useMultiplayerStore = create<MultiplayerStore>((set, get) => ({
     // 遊戲事件
     newSocket.on('game_started', (gameData: any) => {
       console.log('遊戲開始:', gameData);
+      
+      // 初始化並啟動遊戲邏輯
+      const { initGame, startGame } = useGameStore.getState();
+      initGame(); // 先初始化遊戲，生成方塊
+      startGame(); // 然後開始遊戲
+      
+      console.log('遊戲邏輯已啟動');
+      
       set(state => ({
         gameState: {
           ...state.gameState,
-          gameStartTime: new Date()
+          gameStartTime: new Date(),
+          room: state.gameState.room ? {
+            ...state.gameState.room,
+            gameStatus: 'playing'
+          } : null
         }
       }));
     });
@@ -266,6 +320,57 @@ export const useMultiplayerStore = create<MultiplayerStore>((set, get) => ({
       // 這裡可以觸發攻擊效果，比如添加垃圾行
     });
 
+    // 玩家準備狀態變更事件
+    newSocket.on('player_ready_changed', (data: { playerId: string; isReady: boolean }) => {
+      console.log('收到玩家準備狀態變更事件:', data);
+      set(state => {
+        console.log('處理準備狀態變更前的狀態:', {
+          hasRoom: !!state.gameState.room,
+          roomId: state.gameState.room?.id,
+          players: state.gameState.room?.players
+        });
+        
+        if (!state.gameState.room) {
+          console.log('警告: 沒有房間狀態，忽略準備狀態變更');
+          return state;
+        }
+        
+        const updatedPlayers = state.gameState.room.players.map(player => {
+          if (player.id === data.playerId) {
+            console.log(`更新玩家 ${player.user.name} 的準備狀態: ${player.isReady} -> ${data.isReady}`);
+            return { ...player, isReady: data.isReady };
+          }
+          return player;
+        });
+        
+        const updatedRoom = {
+          ...state.gameState.room,
+          players: updatedPlayers
+        };
+        
+        const { currentUser } = useUserStore.getState();
+        const currentPlayer = updatedPlayers.find(p => p.user.id === currentUser?.id);
+        const opponent = updatedPlayers.find(p => p.user.id !== currentUser?.id);
+        
+        console.log('準備狀態變更後的新狀態:', {
+          roomId: updatedRoom.id,
+          currentPlayer: currentPlayer?.user.name,
+          currentPlayerReady: currentPlayer?.isReady,
+          opponent: opponent?.user.name,
+          opponentReady: opponent?.isReady
+        });
+        
+        return {
+          gameState: {
+            ...state.gameState,
+            room: updatedRoom,
+            currentPlayer: currentPlayer || state.gameState.currentPlayer,
+            opponent: opponent || state.gameState.opponent
+          }
+        };
+      });
+    });
+
     // 房間列表事件
     newSocket.on('room_list', (rooms: Room[]) => {
       set({ availableRooms: rooms });
@@ -280,9 +385,18 @@ export const useMultiplayerStore = create<MultiplayerStore>((set, get) => ({
         gameState: {
           ...state.gameState,
           room,
-          currentPlayer: player
+          currentPlayer: player,
+          opponent: room.players.find(p => p.id !== player.id) || null
         }
       }));
+    });
+
+    newSocket.on('match_searching', () => {
+      console.log('開始搜索匹配');
+      set({ 
+        isSearching: true, 
+        searchStartTime: new Date() 
+      });
     });
 
     newSocket.on('match_cancelled', () => {
@@ -315,7 +429,9 @@ export const useMultiplayerStore = create<MultiplayerStore>((set, get) => ({
     const { socket } = get();
     if (!socket?.connected) return;
     
-    socket.emit('create_room', { name: roomName });
+    const { currentUser } = useUserStore.getState();
+    console.log('創建房間時的用戶信息:', currentUser);
+    socket.emit('create_room', { name: roomName, user: currentUser });
   },
 
   // 加入房間
@@ -323,14 +439,29 @@ export const useMultiplayerStore = create<MultiplayerStore>((set, get) => ({
     const { socket } = get();
     if (!socket?.connected) return;
     
-    socket.emit('join_room', { roomId });
+    const { currentUser } = useUserStore.getState();
+    console.log('加入房間時的用戶信息:', currentUser);
+    socket.emit('join_room', { roomId, user: currentUser });
   },
 
   // 離開房間
   leaveRoom: () => {
-    const { socket } = get();
-    if (!socket?.connected) return;
+    console.log('🚨 leaveRoom 函數被調用!');
+    console.log('調用堆棧:', new Error().stack);
     
+    const { socket, gameState } = get();
+    console.log('leaveRoom 調用時的狀態:', {
+      connected: socket?.connected,
+      hasRoom: !!gameState.room,
+      roomId: gameState.room?.id
+    });
+    
+    if (!socket?.connected) {
+      console.log('Socket未連接，無法離開房間');
+      return;
+    }
+    
+    console.log('發送 leave_room 事件到服務器');
     socket.emit('leave_room');
   },
 
@@ -344,8 +475,18 @@ export const useMultiplayerStore = create<MultiplayerStore>((set, get) => ({
 
   // 設置準備狀態
   setReady: (isReady: boolean) => {
-    const { socket } = get();
-    if (!socket?.connected) return;
+    const { socket, gameState } = get();
+    console.log('發送準備狀態變更:', {
+      isReady,
+      connected: socket?.connected,
+      hasRoom: !!gameState.room,
+      roomId: gameState.room?.id
+    });
+    
+    if (!socket?.connected) {
+      console.log('錯誤: Socket未連接，無法設置準備狀態');
+      return;
+    }
     
     socket.emit('set_ready', { isReady });
   },
@@ -371,11 +512,9 @@ export const useMultiplayerStore = create<MultiplayerStore>((set, get) => ({
     const { socket } = get();
     if (!socket?.connected) return;
     
-    socket.emit('quick_match');
-    set({ 
-      isSearching: true, 
-      searchStartTime: new Date() 
-    });
+    const { currentUser } = useUserStore.getState();
+    console.log('快速匹配時的用戶信息:', currentUser);
+    socket.emit('quick_match', { user: currentUser });
   },
 
   // 取消快速匹配
