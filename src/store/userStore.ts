@@ -64,6 +64,8 @@ export interface UserState {
   friends: User[];
   // 載入狀態
   isLoading: boolean;
+  // 錯誤狀態
+  error: string | null;
   
   // 認證相關方法
   loginWithEmail: (email: string, password: string) => Promise<void>;
@@ -72,6 +74,13 @@ export interface UserState {
   logout: () => void;
   register: (email: string, password: string, name: string) => Promise<void>;
   setUser: (user: User) => void;
+  
+  // 用戶資料管理方法
+  updateProfile: (data: { name?: string; avatar?: string; email?: string; currentPassword?: string; newPassword?: string }) => Promise<void>;
+  deleteAccount: () => Promise<void>;
+  
+  // 錯誤處理方法
+  clearError: () => void;
   
   // 遊戲記錄方法
   addGameRecord: (record: Omit<GameRecord, 'id' | 'userId' | 'createdAt' | 'playedAt'>) => void;
@@ -99,6 +108,13 @@ export interface UserActions {
   logout: () => void;
   register: (email: string, password: string, name: string) => Promise<void>;
   setUser: (user: User) => void;
+  
+  // 用戶資料管理
+  updateProfile: (data: { name?: string; avatar?: string; email?: string; currentPassword?: string; newPassword?: string }) => Promise<void>;
+  deleteAccount: () => Promise<void>;
+  
+  // 錯誤處理
+  clearError: () => void;
   
   // 遊戲記錄
   addGameRecord: (record: Omit<GameRecord, 'id' | 'userId' | 'createdAt' | 'playedAt'>) => void;
@@ -217,6 +233,7 @@ export const useUserStore = create<UserState>()(persist(
     achievements: DEFAULT_ACHIEVEMENTS.map(achievement => ({ ...achievement })),
     friends: [],
     isLoading: false,
+    error: null,
 
     // Email/Password 登入
     loginWithEmail: async (email: string, password: string) => {
@@ -580,6 +597,89 @@ export const useUserStore = create<UserState>()(persist(
     // 獲取好友列表
     getFriends: () => {
       return get().friends;
+    },
+
+    // 更新用戶資料
+    updateProfile: async (data: { name?: string; avatar?: string; email?: string; currentPassword?: string; newPassword?: string }) => {
+      const { currentUser } = get();
+      if (!currentUser) {
+        set({ error: '用戶未登入' });
+        return;
+      }
+
+      set({ isLoading: true, error: null });
+      
+      try {
+        // 更新本地用戶資料（只更新name和avatar）
+        const updatedUser = {
+          ...currentUser,
+          ...(data.name && { name: data.name }),
+          ...(data.avatar && { avatar: data.avatar }),
+          ...(data.email && { email: data.email })
+        };
+        
+        set({
+          currentUser: updatedUser,
+          isLoading: false
+        });
+        
+        // 如果是Firebase用戶，這裡可以添加Firebase更新邏輯
+        // if (!currentUser.isGuest) {
+        //   if (data.email || data.currentPassword || data.newPassword) {
+        //     await updateFirebaseProfile(data);
+        //   }
+        // }
+        
+      } catch (error: any) {
+        set({ 
+          isLoading: false, 
+          error: error.message || '更新資料失敗' 
+        });
+        throw error;
+      }
+    },
+
+    // 刪除帳戶
+    deleteAccount: async () => {
+      const { currentUser } = get();
+      if (!currentUser) {
+        set({ error: '用戶未登入' });
+        return;
+      }
+
+      set({ isLoading: true, error: null });
+      
+      try {
+        // 如果是Firebase用戶，這裡可以添加Firebase刪除邏輯
+        // await deleteFirebaseAccount();
+        
+        // 清除所有用戶數據
+        set({
+          currentUser: null,
+          isAuthenticated: false,
+          gameRecords: [],
+          userStats: getInitialStats(),
+          achievements: DEFAULT_ACHIEVEMENTS.map(achievement => ({ ...achievement })),
+          friends: [],
+          isLoading: false,
+          error: null
+        });
+        
+        // 清除本地存儲
+        localStorage.removeItem('tetris-user-store');
+        
+      } catch (error: any) {
+        set({ 
+          isLoading: false, 
+          error: error.message || '刪除帳戶失敗' 
+        });
+        throw error;
+      }
+    },
+
+    // 清除錯誤
+    clearError: () => {
+      set({ error: null });
     },
 
     // 設置用戶（用於Firebase認證狀態同步）

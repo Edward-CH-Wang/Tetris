@@ -1,0 +1,17 @@
+# Vercel Environment Variables for Firebase
+# Copy these to your Vercel project dashboard under Settings > Environment Variables
+
+VITE_FIREBASE_API_KEY=AIzaSyBSuWPIqfOkLtm0tMZNXif-6HG2dc8-RKs
+VITE_FIREBASE_AUTH_DOMAIN=tetris-game-bb11f.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=tetris-game-bb11f
+VITE_FIREBASE_STORAGE_BUCKET=tetris-game-bb11f.firebasestorage.app
+VITE_FIREBASE_MESSAGING_SENDER_ID=189316509379
+VITE_FIREBASE_APP_ID=1:189316509379:web:495b4d179a622efd96fc76
+
+# Instructions:
+# 1. Go to https://vercel.com/dashboard
+# 2. Select your project (trae_2y1h2b2b)
+# 3. Go to Settings > Environment Variables
+# 4. Add each variable above with the corresponding value
+# 5. Set the environment to 'Production' (and optionally 'Preview' and 'Development')
+# 6. Redeploy your project after adding all variables

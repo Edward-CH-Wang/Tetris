@@ -150,14 +150,14 @@ export const useMultiplayerStore = create<MultiplayerStore>((set, get) => ({
     // 房間事件
     newSocket.on('room_created', (room: Room) => {
       console.log('房間創建成功:', room);
-      const { user } = useUserStore.getState();
-      const currentPlayer = room.players.find(p => p.user.id === user?.id);
+      const { currentUser } = useUserStore.getState();
+      const currentPlayer = room.players.find(p => p.user.id === currentUser?.id);
       set(state => ({
         gameState: {
           ...state.gameState,
           room,
           currentPlayer: currentPlayer || null,
-          opponent: room.players.find(p => p.user.id !== user?.id) || null
+          opponent: room.players.find(p => p.user.id !== currentUser?.id) || null
         }
       }));
     });

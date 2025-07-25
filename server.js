@@ -13,7 +13,7 @@ const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
     origin: process.env.NODE_ENV === 'production' 
-      ? ["https://your-domain.zeabur.app"] // 替換為您的Zeabur域名
+      ? ["https://tetris-multiplayer.zeabur.app", "https://*.zeabur.app"] // Zeabur前端域名
       : ["http://localhost:5173", "http://localhost:5174", "http://localhost:5175"],
     methods: ["GET", "POST"]
   }
