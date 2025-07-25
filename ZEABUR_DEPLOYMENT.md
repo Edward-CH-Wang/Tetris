@@ -65,6 +65,24 @@ Zeabur 會自動為後端服務設置：
 - **端口**: `3001`
 - **分支**: `main`（跟隨 GitHub 主分支）
 
+#### ⚠️ 重要：Socket.IO 服務配置修正
+
+如果 Socket.IO 服務部署失敗，出現錯誤「process '/bin/sh -c npm run build' did not complete successfully」：
+
+**問題原因**：Zeabur 錯誤地嘗試執行前端構建命令 `npm run build`，但 Socket.IO 服務器不需要構建步驟。
+
+**解決方案**：
+1. 部署完成後，進入後端服務的「Settings」頁面
+2. 在「General」標籤中找到「Command」欄位
+3. 確保命令設置為：`node server.js`
+4. 在「Networking」標籤中確認端口為：`3001`
+5. 點擊「Save」保存設置
+6. 重新部署服務
+
+**正確的服務配置**：
+- **前端服務**：使用 `npm run build` 構建靜態文件
+- **後端服務**：直接使用 `node server.js` 啟動，無需構建步驟
+
 #### 4.3 手動調整後端環境變數
 在後端服務的「Environment」標籤中確認/添加：
 ```
@@ -122,7 +140,19 @@ VITE_FIREBASE_APP_ID=1:189316509379:web:495b4d179a622efd96fc76
 
 ### 6. GitHub 自動部署工作流程
 
-#### 6.1 獲取服務域名
+#### 6.1 驗證服務部署狀態
+在繼續之前，請確認兩個服務都已成功部署：
+
+**檢查後端服務**：
+1. 在 Zeabur 控制台中確認後端服務狀態為「Running」（綠色）
+2. 如果狀態為「Failed」（紅色），請按照上述 Socket.IO 配置修正步驟操作
+3. 查看「Logs」標籤確認沒有啟動錯誤
+
+**檢查前端服務**：
+1. 確認前端服務構建成功，狀態為「Running」
+2. 訪問前端域名確認頁面正常載入
+
+#### 6.2 獲取服務域名
 部署完成後，記錄兩個服務的域名：
 - **前端域名**: `https://frontend-tetris-multiplayer-xxx.zeabur.app`
 - **後端域名**: `https://backend-tetris-multiplayer-xxx.zeabur.app`
