@@ -14,7 +14,7 @@
       "name": "backend",
       "type": "nodejs",
       "buildCommand": "echo 'No build needed for Node.js server'",
-      "startCommand": "node server.js",
+      "startCommand": "npm start",
       "port": 3001,
       "environmentVariables": {
         "NODE_ENV": "production",

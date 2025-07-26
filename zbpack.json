@@ -1,0 +1,6 @@
+{
+  "build_command": "echo 'No build needed for Node.js server'",
+  "start_command": "node server.js",
+  "node_version": "18",
+  "install_command": "npm install"
+}

@@ -239,7 +239,8 @@ git push origin main
     {
       "name": "backend",
       "type": "nodejs",
-      "startCommand": "node server.js",
+      "buildCommand": "echo 'No build needed for Node.js server'",
+      "startCommand": "npm start",
       "port": 3001,
       "environmentVariables": {
         "NODE_ENV": "production",
@@ -294,7 +295,61 @@ git push origin main
 
 ### 服務運行問題
 
-#### 4. Socket.IO 連接失敗
+#### 4. "Crashed Retrying" 錯誤
+**問題**: 後端服務顯示 "Crashed Retrying" 狀態，不斷重啟失敗
+**常見原因**:
+- 缺少 `start` 腳本在 `package.json` 中
+- 端口配置錯誤（未使用 `process.env.PORT`）
+- 缺少 `zbpack.json` 配置文件
+- 啟動命令不正確
+
+**解決方案**:
+1. **確保 package.json 包含 start 腳本**:
+   ```json
+   {
+     "scripts": {
+       "start": "node server.js",
+       "server": "node server.js"
+     }
+   }
+   ```
+
+2. **創建 zbpack.json 配置文件**:
+   ```json
+   {
+     "build_command": "echo 'No build needed for Node.js server'",
+     "start_command": "node server.js",
+     "node_version": "18",
+     "install_command": "npm install"
+   }
+   ```
+
+3. **確認 server.js 中的端口配置**:
+   ```javascript
+   const PORT = process.env.PORT || 3001;
+   httpServer.listen(PORT, () => {
+     console.log(`服務器運行在端口 ${PORT}`);
+   });
+   ```
+
+4. **更新 zeabur.json 使用 npm start**:
+   ```json
+   {
+     "name": "backend",
+     "type": "nodejs",
+     "startCommand": "npm start"
+   }
+   ```
+
+5. **檢查依賴項完整性**:
+   - 確保所有必要的依賴都在 `package.json` 的 `dependencies` 中
+   - 運行 `npm install` 確保 `package-lock.json` 是最新的
+
+6. **查看部署日誌**:
+   - 在 Zeabur 控制台查看詳細的錯誤日誌
+   - 檢查是否有模塊缺失或語法錯誤
+
+#### 5. Socket.IO 連接失敗
 **問題**: 前端無法連接到後端 Socket.IO 服務
 **解決方案**:
 - 檢查 `VITE_SOCKET_URL` 環境變數是否正確
