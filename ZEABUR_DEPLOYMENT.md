@@ -24,7 +24,8 @@ git push origin main
 確保您的 GitHub 倉庫包含以下關鍵文件：
 - `package.json` - 項目依賴和腳本
 - `server.js` - Socket.IO 後端服務
-- `zeabur.json` - Zeabur 配置文件
+- `zbpack.json` - Zeabur 配置文件
+- `.zeaburignore` - 忽略前端文件的配置
 - `src/` - 前端源代碼
 - `.env.example` - 環境變數範例
 
@@ -52,10 +53,10 @@ git push origin main
 ### 4. 自動部署後端服務 (Socket.IO)
 
 #### 4.1 Zeabur 自動檢測
-由於項目包含 `zeabur.json` 配置文件，Zeabur 會自動：
-1. 檢測到這是一個多服務項目
-2. 根據配置文件自動創建前端和後端服務
-3. 設置基本的構建和運行命令
+由於項目包含 `zbpack.json` 配置文件，Zeabur 會自動：
+1. 檢測到這是一個 Node.js 後端服務
+2. 根據配置文件設置構建和運行命令
+3. 忽略前端文件（通過 `.zeaburignore`）
 
 #### 4.2 後端服務自動配置
 Zeabur 會自動為後端服務設置：
@@ -65,23 +66,57 @@ Zeabur 會自動為後端服務設置：
 - **端口**: `3001`
 - **分支**: `main`（跟隨 GitHub 主分支）
 
-#### ⚠️ 重要：Socket.IO 服務配置修正
+#### ⚠️ 重要：Socket.IO 服務構建失敗解決方案
 
-如果 Socket.IO 服務部署失敗，出現錯誤「process '/bin/sh -c npm run build' did not complete successfully」：
+如果 Socket.IO 服務部署失敗，出現以下錯誤：
+- "failed to calculate checksum"
+- "failed to build image"
+- "process '/bin/sh -c npm run build' did not complete successfully"
 
-**問題原因**：Zeabur 錯誤地嘗試執行前端構建命令 `npm run build`，但 Socket.IO 服務器不需要構建步驟。
+**問題原因**：
+1. 項目是混合項目（前端+後端在同一目錄）
+2. Zeabur 檢測到前端文件（vite.config.ts, index.html）會嘗試構建前端
+3. 但配置文件指示這是 Node.js 後端服務，造成衝突
 
 **解決方案**：
-1. 部署完成後，進入後端服務的「Settings」頁面
-2. 在「General」標籤中找到「Command」欄位
-3. 確保命令設置為：`node server.js`
-4. 在「Networking」標籤中確認端口為：`3001`
-5. 點擊「Save」保存設置
-6. 重新部署服務
+
+**方案一：使用正確的配置文件**
+項目已包含以下配置文件：
+
+1. **zbpack.json** - Zeabur 官方配置文件：
+```json
+{
+  "build_command": "npm install",
+  "start_command": "node server.js",
+  "node_version": "18",
+  "install_command": "npm install",
+  "framework": "nodejs"
+}
+```
+
+2. **.zeaburignore** - 忽略前端文件：
+```
+# 忽略前端相關文件
+src/
+public/
+index.html
+vite.config.ts
+tsconfig.*.json
+tailwind.config.js
+postcss.config.js
+eslint.config.js
+```
+
+**方案二：手動配置服務**（推薦）
+1. 在 Zeabur 控制台手動添加服務
+2. 選擇「Node.js」作為服務類型
+3. 設置構建命令：`npm install`
+4. 設置啟動命令：`node server.js`
+5. 設置端口：`3001`
 
 **正確的服務配置**：
 - **前端服務**：使用 `npm run build` 構建靜態文件
-- **後端服務**：直接使用 `node server.js` 啟動，無需構建步驟
+- **後端服務**：使用 `npm install` 安裝依賴，`node server.js` 啟動
 
 #### 4.3 手動調整後端環境變數
 在後端服務的「Environment」標籤中確認/添加：
@@ -100,16 +135,22 @@ PORT=3001
 部署完成後，在服務詳情頁面複製後端域名：
 `https://backend-tetris-multiplayer-xxx.zeabur.app`
 
-### 5. 自動部署前端服務
+### 5. 手動部署前端服務
 
-#### 5.1 前端服務自動創建
-基於 `zeabur.json` 配置，Zeabur 會自動創建前端服務：
-- **服務名稱**: `frontend`
-- **類型**: Static Site
-- **框架**: 自動檢測為 Vite
-- **構建命令**: `npm run build`
-- **輸出目錄**: `dist`
-- **分支**: `main`
+#### 5.1 創建前端服務
+由於我們使用 `.zeaburignore` 忽略了前端文件，需要手動創建前端服務：
+
+1. 在 Zeabur 控制台點擊「Add Service」
+2. 選擇「Git Repository」
+3. 選擇同一個 GitHub 倉庫
+4. Zeabur 會自動檢測為 Vite 項目
+5. 服務配置：
+   - **服務名稱**: `frontend`
+   - **類型**: Static Site
+   - **框架**: Vite
+   - **構建命令**: `npm run build`
+   - **輸出目錄**: `dist`
+   - **分支**: `main`
 
 #### 5.2 配置前端環境變數
 在前端服務的「Environment」標籤中設置：
@@ -218,38 +259,159 @@ git push origin main
 #### 8.2 更新環境變數
 如果使用自定義域名，記得更新相應的環境變數。
 
-## 🔧 配置文件說明
+## 🔧 Monorepo 項目結構
 
-### zeabur.json
-項目已包含 `zeabur.json` 配置文件：
+### 項目已重構為 Monorepo 結構
 
+```
+Tetris/
+├── frontend/                 # 前端服務目錄
+│   ├── src/                 # React 源代碼
+│   ├── public/              # 靜態資源
+│   ├── index.html           # HTML 模板
+│   ├── package.json         # 前端依賴
+│   ├── vite.config.ts       # Vite 配置
+│   ├── tailwind.config.js   # Tailwind 配置
+│   └── tsconfig.json        # TypeScript 配置
+├── backend/                  # 後端服務目錄
+│   ├── server.js            # Socket.IO 服務器
+│   └── package.json         # 後端依賴
+├── package.json             # 根目錄 workspace 配置
+├── pnpm-workspace.yaml      # pnpm workspace 配置
+└── README.md
+```
+
+### Workspace 配置文件
+
+**根目錄 `package.json`**：
 ```json
 {
   "name": "tetris-multiplayer",
-  "services": [
-    {
-      "name": "frontend",
-      "type": "static",
-      "buildCommand": "npm run build",
-      "outputDirectory": "dist",
-      "environmentVariables": {
-        "VITE_SOCKET_URL": "wss://tetris-server.zeabur.app"
-      }
-    },
-    {
-      "name": "backend",
-      "type": "nodejs",
-      "buildCommand": "echo 'No build needed for Node.js server'",
-      "startCommand": "npm start",
-      "port": 3001,
-      "environmentVariables": {
-        "NODE_ENV": "production",
-        "PORT": "3001"
-      }
-    }
-  ]
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:backend": "cd backend && npm run server",
+    "build:frontend": "cd frontend && npm run build",
+    "start:backend": "cd backend && npm start",
+    "dev:full": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "install:all": "npm install && cd frontend && npm install && cd ../backend && npm install"
+  }
 }
 ```
+
+**`pnpm-workspace.yaml`**：
+```yaml
+packages:
+  - 'frontend'
+  - 'backend'
+```
+
+## 🚀 Monorepo 部署到 Zeabur
+
+### 1. Zeabur 自動檢測 Monorepo
+
+使用 Monorepo 結構後，Zeabur 會自動檢測並創建兩個獨立的服務：
+
+#### 自動檢測流程
+1. **前端服務檢測**：
+   - Zeabur 檢測到 `frontend/` 目錄中的 `vite.config.ts`
+   - 自動識別為 Vite 項目
+   - 服務類型：Static Site
+   - 構建命令：`npm run build`
+   - 輸出目錄：`dist`
+
+2. **後端服務檢測**：
+   - Zeabur 檢測到 `backend/` 目錄中的 `package.json`
+   - 自動識別為 Node.js 項目
+   - 服務類型：Node.js
+   - 啟動命令：`npm start`
+
+### 2. 部署步驟
+
+#### 步驟 1：推送 Monorepo 到 GitHub
+```bash
+# 提交所有變更
+git add .
+git commit -m "重構為 Monorepo 結構，支援 Zeabur 多服務部署"
+git push origin main
+```
+
+#### 步驟 2：在 Zeabur 創建新專案
+1. 登入 [Zeabur Dashboard](https://dash.zeabur.com)
+2. 點擊「Create Project」
+3. 選擇「Import from GitHub」
+4. 選擇您的 Tetris 倉庫
+5. 確保選擇 `main` 分支
+
+#### 步驟 3：Zeabur 自動創建服務
+Zeabur 會自動檢測並創建：
+- **Frontend Service**：`frontend-tetris-xxx.zeabur.app`
+- **Backend Service**：`backend-tetris-xxx.zeabur.app`
+
+### 3. 配置環境變數
+
+#### 前端服務環境變數
+在前端服務的「Environment」標籤中設置：
+```
+VITE_SOCKET_URL=wss://backend-tetris-xxx.zeabur.app
+VITE_FIREBASE_API_KEY=your_firebase_api_key
+VITE_FIREBASE_AUTH_DOMAIN=your_firebase_auth_domain
+VITE_FIREBASE_PROJECT_ID=your_firebase_project_id
+VITE_FIREBASE_STORAGE_BUCKET=your_firebase_storage_bucket
+VITE_FIREBASE_MESSAGING_SENDER_ID=your_firebase_messaging_sender_id
+VITE_FIREBASE_APP_ID=your_firebase_app_id
+```
+
+#### 後端服務環境變數
+在後端服務的「Environment」標籤中設置：
+```
+NODE_ENV=production
+PORT=$PORT
+CORS_ORIGIN=https://frontend-tetris-xxx.zeabur.app
+```
+
+### 4. 更新 CORS 配置
+
+修改 `backend/server.js` 中的 CORS 設置：
+```javascript
+cors: {
+  origin: process.env.NODE_ENV === 'production' 
+    ? process.env.CORS_ORIGIN || "*.zeabur.app"
+    : ["http://localhost:5173", "http://localhost:5174"],
+  methods: ["GET", "POST"]
+}
+```
+
+### 5. 本地開發命令
+
+```bash
+# 安裝所有依賴
+npm run install:all
+
+# 同時啟動前後端服務
+npm run dev:full
+
+# 單獨啟動前端
+npm run dev:frontend
+
+# 單獨啟動後端
+npm run dev:backend
+
+# 構建前端
+npm run build:frontend
+```
+
+### 6. Monorepo 優勢
+
+✅ **自動檢測**：Zeabur 原生支援，無需額外配置
+✅ **獨立部署**：前後端可以獨立部署和擴展
+✅ **清晰結構**：代碼組織更清晰，便於維護
+✅ **依賴隔離**：前後端依賴完全分離，避免衝突
+✅ **CI/CD 友好**：支援獨立的構建和部署流程
 
 ## 🧪 測試部署
 
