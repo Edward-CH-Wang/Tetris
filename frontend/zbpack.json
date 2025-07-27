@@ -1,0 +1,7 @@
+{
+  "framework": "vite",
+  "build_command": "npm run build",
+  "output_dir": "dist",
+  "node_version": "18",
+  "install_command": "npm install"
+}

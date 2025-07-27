@@ -1,0 +1,26 @@
+{
+  "services": [
+    {
+      "name": "frontend",
+      "path": "frontend",
+      "framework": "vite",
+      "buildCommand": "npm run build",
+      "outputDirectory": "dist",
+      "environmentVariables": {
+        "VITE_SOCKET_URL": "wss://backend-tetris.zeabur.app"
+      }
+    },
+    {
+      "name": "backend",
+      "path": "backend",
+      "framework": "nodejs",
+      "buildCommand": "npm install",
+      "startCommand": "npm start",
+      "port": 3001,
+      "environmentVariables": {
+        "NODE_ENV": "production",
+        "PORT": "$PORT"
+      }
+    }
+  ]
+}

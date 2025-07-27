@@ -259,6 +259,85 @@ git push origin main
 #### 8.2 更新環境變數
 如果使用自定義域名，記得更新相應的環境變數。
 
+## 🔧 配置文件說明
+
+### Monorepo 多服務配置
+
+項目現在包含完整的 Zeabur Monorepo 配置：
+
+#### 1. `.zeabur/config.json` - 主配置文件
+```json
+{
+  "services": [
+    {
+      "name": "frontend",
+      "path": "frontend",
+      "framework": "vite",
+      "buildCommand": "npm run build",
+      "outputDirectory": "dist"
+    },
+    {
+      "name": "backend",
+      "path": "backend",
+      "framework": "nodejs",
+      "buildCommand": "npm install",
+      "startCommand": "npm start",
+      "port": 3001
+    }
+  ]
+}
+```
+
+#### 2. 服務特定配置文件
+
+**`frontend/zbpack.json`**：
+```json
+{
+  "framework": "vite",
+  "build_command": "npm run build",
+  "output_dir": "dist",
+  "node_version": "18"
+}
+```
+
+**`backend/zbpack.json`**：
+```json
+{
+  "framework": "nodejs",
+  "build_command": "npm install",
+  "start_command": "npm start",
+  "node_version": "18"
+}
+```
+
+#### 3. Docker 配置
+
+**`frontend/Dockerfile`** - 多階段構建：
+```dockerfile
+FROM node:18-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+RUN npm run build
+
+FROM nginx:alpine
+COPY --from=builder /app/dist /usr/share/nginx/html
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
+```
+
+**`backend/Dockerfile`** - Node.js 服務：
+```dockerfile
+FROM node:18-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm install --only=production
+COPY . .
+EXPOSE 3001
+CMD ["npm", "start"]
+```
+
 ## 🔧 Monorepo 項目結構
 
 ### 項目已重構為 Monorepo 結構
@@ -272,10 +351,16 @@ Tetris/
 │   ├── package.json         # 前端依賴
 │   ├── vite.config.ts       # Vite 配置
 │   ├── tailwind.config.js   # Tailwind 配置
-│   └── tsconfig.json        # TypeScript 配置
+│   ├── tsconfig.json        # TypeScript 配置
+│   ├── zbpack.json          # Zeabur 前端配置
+│   └── Dockerfile           # 前端 Docker 配置
 ├── backend/                  # 後端服務目錄
 │   ├── server.js            # Socket.IO 服務器
-│   └── package.json         # 後端依賴
+│   ├── package.json         # 後端依賴
+│   ├── zbpack.json          # Zeabur 後端配置
+│   └── Dockerfile           # 後端 Docker 配置
+├── .zeabur/                  # Zeabur 配置目錄
+│   └── config.json          # 主配置文件
 ├── package.json             # 根目錄 workspace 配置
 ├── pnpm-workspace.yaml      # pnpm workspace 配置
 └── README.md
@@ -412,6 +497,55 @@ npm run build:frontend
 ✅ **清晰結構**：代碼組織更清晰，便於維護
 ✅ **依賴隔離**：前後端依賴完全分離，避免衝突
 ✅ **CI/CD 友好**：支援獨立的構建和部署流程
+
+## 🚀 Monorepo 部署指南
+
+### 方法一：自動檢測部署（推薦）
+
+1. **提交所有配置文件到 GitHub**：
+```bash
+git add .
+git commit -m "添加 Zeabur Monorepo 配置文件"
+git push origin main
+```
+
+2. **在 Zeabur 創建新專案**：
+   - 刪除現有專案（如果需要）
+   - 創建新專案並連接 GitHub 倉庫
+   - Zeabur 會自動檢測到 `.zeabur/config.json` 配置
+   - 自動創建兩個服務：`frontend` 和 `backend`
+
+### 方法二：手動添加服務
+
+如果自動檢測失敗，可以手動添加：
+
+1. **保持現有前端服務運行**
+2. **手動添加後端服務**：
+   - 點擊「Add Service」
+   - 選擇「Git Repository」
+   - 選擇同一個 GitHub 倉庫
+   - **重要**：設置 Root Directory 為 `backend`
+   - Zeabur 會自動檢測到 `backend/zbpack.json` 和 `backend/Dockerfile`
+
+### 環境變數配置
+
+**前端服務**：
+```
+VITE_SOCKET_URL=wss://backend-tetris-xxx.zeabur.app
+VITE_FIREBASE_API_KEY=your_api_key
+VITE_FIREBASE_AUTH_DOMAIN=your_auth_domain
+VITE_FIREBASE_PROJECT_ID=your_project_id
+VITE_FIREBASE_STORAGE_BUCKET=your_storage_bucket
+VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+VITE_FIREBASE_APP_ID=your_app_id
+```
+
+**後端服務**：
+```
+NODE_ENV=production
+PORT=$PORT
+CORS_ORIGIN=https://frontend-tetris-xxx.zeabur.app
+```
 
 ## 🧪 測試部署
 
