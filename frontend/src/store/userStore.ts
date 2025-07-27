@@ -110,7 +110,7 @@ export interface UserState {
   getFriends: () => User[];
   
   // Firestore 雲端同步方法
-  initializeFirestore: () => Promise<void>;
+  initializeFirestore: () => Promise<boolean>;
   syncToCloud: () => Promise<void>;
   loadFromCloud: () => Promise<void>;
   enableCloudSync: () => void;
@@ -151,7 +151,7 @@ export interface UserActions {
   getFriends: () => User[];
   
   // Firestore 雲端同步
-  initializeFirestore: () => Promise<void>;
+  initializeFirestore: () => Promise<boolean>;
   syncToCloud: () => Promise<void>;
   loadFromCloud: () => Promise<void>;
   enableCloudSync: () => void;
