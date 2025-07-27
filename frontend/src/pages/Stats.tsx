@@ -33,6 +33,7 @@ import {
   Cell
 } from 'recharts';
 import { cn } from '../lib/utils';
+import CloudSyncStatus from '../components/CloudSyncStatus';
 
 const Stats: React.FC = () => {
   const navigate = useNavigate();
@@ -645,6 +646,11 @@ const Stats: React.FC = () => {
               歷史記錄
             </button>
           </div>
+        </div>
+
+        {/* 雲端同步狀態 */}
+        <div className="max-w-7xl mx-auto mb-6">
+          <CloudSyncStatus />
         </div>
 
         {/* 主要內容 */}

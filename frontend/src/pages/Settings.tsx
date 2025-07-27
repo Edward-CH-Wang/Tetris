@@ -19,10 +19,12 @@ import {
   LogOut,
   Trash2,
   Eye,
-  EyeOff
+  EyeOff,
+  Cloud
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '../lib/utils';
+import CloudSyncStatus from '../components/CloudSyncStatus';
 
 interface GameSettings {
   // 音效設定
@@ -64,6 +66,11 @@ interface GameSettings {
   profileVisibility: 'public' | 'friends' | 'private';
   showOnlineStatus: boolean;
   allowFriendRequests: boolean;
+  
+  // 雲端同步設定
+  cloudSyncEnabled: boolean;
+  autoSyncSettings: boolean;
+  syncGameProgress: boolean;
 }
 
 const defaultSettings: GameSettings = {
@@ -94,12 +101,15 @@ const defaultSettings: GameSettings = {
   achievementNotifications: true,
   profileVisibility: 'public',
   showOnlineStatus: true,
-  allowFriendRequests: true
+  allowFriendRequests: true,
+  cloudSyncEnabled: true,
+  autoSyncSettings: true,
+  syncGameProgress: true
 };
 
 const Settings: React.FC = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'profile' | 'game' | 'audio' | 'controls' | 'visual' | 'notifications' | 'privacy'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'game' | 'audio' | 'controls' | 'visual' | 'notifications' | 'privacy' | 'cloud'>('profile');
   const [settings, setSettings] = useState<GameSettings>(defaultSettings);
   const [isEditing, setIsEditing] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -445,6 +455,7 @@ const Settings: React.FC = () => {
                   {renderTabButton('visual', <Palette className="w-4 h-4" />, '視覺設定')}
                   {renderTabButton('notifications', <Bell className="w-4 h-4" />, '通知設定')}
                   {renderTabButton('privacy', <Shield className="w-4 h-4" />, '隱私設定')}
+                  {renderTabButton('cloud', <Cloud className="w-4 h-4" />, '雲端同步')}
                 </div>
                 
                 <div className="mt-6 pt-6 border-t border-gray-700">
@@ -795,6 +806,58 @@ const Settings: React.FC = () => {
                         settings.allowFriendRequests,
                         (value) => handleSettingChange('allowFriendRequests', value)
                       )}
+                    </div>
+                  </div>
+                )}
+
+                {/* 雲端同步設定 */}
+                {activeTab === 'cloud' && (
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between">
+                      <h2 className="text-2xl font-bold text-white">雲端同步</h2>
+                      <CloudSyncStatus />
+                    </div>
+                    
+                    <div className="space-y-4">
+                      {renderToggle(
+                        '啟用雲端同步',
+                        '將您的設定和遊戲進度同步到雲端',
+                        settings.cloudSyncEnabled,
+                        (value) => handleSettingChange('cloudSyncEnabled', value)
+                      )}
+                      
+                      {settings.cloudSyncEnabled && (
+                        <div className="ml-6 space-y-4">
+                          {renderToggle(
+                            '自動同步設定',
+                            '自動將遊戲設定同步到雲端',
+                            settings.autoSyncSettings,
+                            (value) => handleSettingChange('autoSyncSettings', value)
+                          )}
+                          
+                          {renderToggle(
+                            '同步遊戲進度',
+                            '將遊戲進度和成就同步到雲端',
+                            settings.syncGameProgress,
+                            (value) => handleSettingChange('syncGameProgress', value)
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="bg-gray-700/50 rounded-lg p-4">
+                      <h3 className="text-lg font-semibold text-white mb-2">同步狀態</h3>
+                      <p className="text-sm text-gray-300 mb-4">
+                        最後同步時間：{new Date().toLocaleString('zh-TW')}
+                      </p>
+                      <div className="flex gap-3">
+                        <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+                          立即同步
+                        </button>
+                        <button className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors">
+                          重置雲端數據
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )}

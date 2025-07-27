@@ -2,6 +2,12 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { signInWithGoogle, signOutUser, onAuthStateChanged, signInWithEmail, registerWithEmailAndPassword } from '../lib/firebase';
 import { User as FirebaseUser } from 'firebase/auth';
+import { 
+  firestoreUserService, 
+  firestoreDataSyncService, 
+  checkFirestoreConnection,
+  FirestoreUser 
+} from '../lib/firestore';
 
 export interface User {
   id: string;
@@ -66,6 +72,10 @@ export interface UserState {
   isLoading: boolean;
   // 錯誤狀態
   error: string | null;
+  // Firestore 相關狀態
+  isFirestoreConnected: boolean;
+  isCloudSyncEnabled: boolean;
+  lastSyncTime: Date | null;
   
   // 認證相關方法
   loginWithEmail: (email: string, password: string) => Promise<void>;
@@ -98,6 +108,13 @@ export interface UserState {
   addFriend: (friendId: string) => Promise<void>;
   removeFriend: (friendId: string) => void;
   getFriends: () => User[];
+  
+  // Firestore 雲端同步方法
+  initializeFirestore: () => Promise<void>;
+  syncToCloud: () => Promise<void>;
+  loadFromCloud: () => Promise<void>;
+  enableCloudSync: () => void;
+  disableCloudSync: () => void;
 }
 
 export interface UserActions {
@@ -132,6 +149,13 @@ export interface UserActions {
   addFriend: (friendId: string) => Promise<void>;
   removeFriend: (friendId: string) => void;
   getFriends: () => User[];
+  
+  // Firestore 雲端同步
+  initializeFirestore: () => Promise<void>;
+  syncToCloud: () => Promise<void>;
+  loadFromCloud: () => Promise<void>;
+  enableCloudSync: () => void;
+  disableCloudSync: () => void;
 }
 
 type UserStore = UserState & UserActions;
@@ -234,6 +258,10 @@ export const useUserStore = create<UserState>()(persist(
     friends: [],
     isLoading: false,
     error: null,
+    // Firestore 相關狀態
+    isFirestoreConnected: false,
+    isCloudSyncEnabled: false,
+    lastSyncTime: null,
 
     // Email/Password 登入
     loginWithEmail: async (email: string, password: string) => {
@@ -257,6 +285,17 @@ export const useUserStore = create<UserState>()(persist(
           isAuthenticated: true,
           isLoading: false
         });
+        
+        // 初始化 Firestore 並載入雲端數據
+        await get().initializeFirestore();
+        
+        console.log('Google 登入成功:', user);
+        
+        // 初始化 Firestore 並載入雲端數據
+        await get().initializeFirestore();
+        
+        // 初始化 Firestore 並載入雲端數據
+        await get().initializeFirestore();
       } catch (error: any) {
         set({ isLoading: false });
         console.error('Email 登入失敗:', error);
@@ -286,6 +325,11 @@ export const useUserStore = create<UserState>()(persist(
           isAuthenticated: true,
           isLoading: false
         });
+        
+        // 初始化 Firestore 並載入雲端數據
+        await get().initializeFirestore();
+        
+        console.log('Google 登入成功:', user);
       } catch (error: any) {
         set({ isLoading: false });
         console.error('Google 登入失敗:', error);
@@ -315,6 +359,11 @@ export const useUserStore = create<UserState>()(persist(
           isAuthenticated: true,
           isLoading: false
         });
+        
+        // 初始化 Firestore 並載入雲端數據
+        await get().initializeFirestore();
+        
+        console.log('註冊成功:', user);
       } catch (error: any) {
         set({ isLoading: false });
         console.error('註冊失敗:', error);
@@ -334,8 +383,20 @@ export const useUserStore = create<UserState>()(persist(
     // 登出
     logout: async () => {
       try {
-        // 如果是 Firebase 用戶，先從 Firebase 登出
-        const { currentUser } = get();
+        const { currentUser, isCloudSyncEnabled } = get();
+        
+        // 如果是 Firebase 用戶且啟用雲端同步，先同步數據到雲端
+        if (currentUser && !currentUser.isGuest && isCloudSyncEnabled) {
+          try {
+            await get().syncToCloud();
+            console.log('登出前數據同步完成');
+          } catch (syncError) {
+            console.error('登出前同步失敗:', syncError);
+            // 繼續登出流程，即使同步失敗
+          }
+        }
+        
+        // 如果是 Firebase 用戶，從 Firebase 登出
         if (currentUser && !currentUser.isGuest) {
           try {
             await signOutUser();
@@ -345,7 +406,7 @@ export const useUserStore = create<UserState>()(persist(
           }
         }
         
-        // 重置所有狀態到初始值
+        // 重置所有狀態到初始值（但保留雲端數據）
         set({
           currentUser: null,
           isAuthenticated: false,
@@ -353,7 +414,11 @@ export const useUserStore = create<UserState>()(persist(
           userStats: getInitialStats(),
           achievements: DEFAULT_ACHIEVEMENTS.map(achievement => ({ ...achievement })),
           friends: [],
-          isLoading: false
+          isLoading: false,
+          // 重置 Firestore 狀態
+          isFirestoreConnected: false,
+          isCloudSyncEnabled: false,
+          lastSyncTime: null
         });
         
         // 設置登出標記，防止persist恢復狀態（雙重保險）
@@ -447,6 +512,14 @@ export const useUserStore = create<UserState>()(persist(
       
       // 檢查成就
       get().checkAchievements();
+      
+      // 如果啟用雲端同步，自動同步到雲端
+      const { isCloudSyncEnabled } = get();
+      if (isCloudSyncEnabled && !currentUser.isGuest) {
+        get().syncToCloud().catch(error => {
+          console.error('自動同步到雲端失敗:', error);
+        });
+      }
     },
 
     // 獲取遊戲記錄
@@ -689,6 +762,114 @@ export const useUserStore = create<UserState>()(persist(
         isAuthenticated: true,
         isLoading: false
       });
+      
+      // 如果啟用雲端同步，自動載入雲端數據
+      const { isCloudSyncEnabled } = get();
+      if (isCloudSyncEnabled && !user.isGuest) {
+        get().loadFromCloud().catch(console.error);
+      }
+    },
+
+    // 初始化 Firestore 連接
+    initializeFirestore: async () => {
+      try {
+        const isConnected = await checkFirestoreConnection();
+        set({ 
+          isFirestoreConnected: isConnected,
+          isCloudSyncEnabled: isConnected 
+        });
+        
+        if (isConnected) {
+          console.log('Firestore 連接成功，雲端同步已啟用');
+        } else {
+          console.warn('Firestore 連接失敗，將使用本地存儲');
+        }
+      } catch (error) {
+        console.error('初始化 Firestore 失敗:', error);
+        set({ 
+          isFirestoreConnected: false,
+          isCloudSyncEnabled: false 
+        });
+      }
+    },
+
+    // 同步數據到雲端
+    syncToCloud: async () => {
+      const { currentUser, gameRecords, userStats, achievements, isCloudSyncEnabled } = get();
+      
+      if (!currentUser || currentUser.isGuest || !isCloudSyncEnabled) {
+        return;
+      }
+
+      try {
+        // 創建或更新用戶資料
+        const firestoreUser: FirestoreUser = {
+          id: currentUser.id,
+          email: currentUser.email,
+          name: currentUser.name,
+          avatar: currentUser.avatar,
+          isGuest: currentUser.isGuest,
+          createdAt: currentUser.createdAt,
+          lastLoginAt: new Date()
+        };
+        
+        await firestoreUserService.createOrUpdateUser(firestoreUser);
+        
+        // 同步遊戲數據
+        await firestoreDataSyncService.syncUserDataToCloud(currentUser.id, {
+          gameRecords,
+          userStats,
+          achievements
+        });
+        
+        set({ lastSyncTime: new Date() });
+        console.log('數據同步到雲端成功');
+      } catch (error) {
+        console.error('同步到雲端失敗:', error);
+        throw error;
+      }
+    },
+
+    // 從雲端載入數據
+    loadFromCloud: async () => {
+      const { currentUser, isCloudSyncEnabled } = get();
+      
+      if (!currentUser || currentUser.isGuest || !isCloudSyncEnabled) {
+        return;
+      }
+
+      try {
+        const cloudData = await firestoreDataSyncService.loadUserDataFromCloud(currentUser.id);
+        
+        if (cloudData) {
+          set({
+            gameRecords: cloudData.gameRecords,
+            userStats: cloudData.userStats,
+            achievements: cloudData.achievements.length > 0 
+              ? cloudData.achievements 
+              : DEFAULT_ACHIEVEMENTS.map(achievement => ({ ...achievement })),
+            lastSyncTime: new Date()
+          });
+          console.log('從雲端載入數據成功');
+        }
+      } catch (error) {
+        console.error('從雲端載入數據失敗:', error);
+        throw error;
+      }
+    },
+
+    // 啟用雲端同步
+    enableCloudSync: () => {
+      set({ isCloudSyncEnabled: true });
+      const { currentUser } = get();
+      if (currentUser && !currentUser.isGuest) {
+        get().loadFromCloud().catch(console.error);
+      }
+    },
+
+    // 停用雲端同步
+    disableCloudSync: () => {
+      set({ isCloudSyncEnabled: false });
     }
   }),
   {
@@ -699,7 +880,10 @@ export const useUserStore = create<UserState>()(persist(
       gameRecords: state.gameRecords,
       userStats: state.userStats,
       achievements: state.achievements,
-      friends: state.friends
+      friends: state.friends,
+      isFirestoreConnected: state.isFirestoreConnected,
+      isCloudSyncEnabled: state.isCloudSyncEnabled,
+      lastSyncTime: state.lastSyncTime
     }),
     onRehydrateStorage: () => {
       // 檢查是否有登出標記

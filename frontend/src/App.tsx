@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import { useFirebaseAuth } from './hooks/useFirebaseAuth';
+import { useUserStore } from './store/userStore';
 
 // Pages
 import Home from './pages/Home';
@@ -15,6 +16,15 @@ import Settings from './pages/Settings';
 function App() {
   // 初始化 Firebase 認證監聽
   useFirebaseAuth();
+  
+  const { initializeFirestore } = useUserStore();
+  
+  // 初始化 Firestore 連接
+  useEffect(() => {
+    initializeFirestore().catch(error => {
+      console.error('應用啟動時初始化 Firestore 失敗:', error);
+    });
+  }, [initializeFirestore]);
   
   return (
     <Router>
