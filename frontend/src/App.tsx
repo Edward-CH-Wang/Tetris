@@ -1,8 +1,9 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import { useFirebaseAuth } from './hooks/useFirebaseAuth';
 import { useUserStore } from './store/userStore';
+import FirebaseConfigWarning from './components/FirebaseConfigWarning';
 
 // Pages
 import Home from './pages/Home';
@@ -18,6 +19,19 @@ function App() {
   useFirebaseAuth();
   
   const { initializeFirestore } = useUserStore();
+  const [showFirebaseWarning, setShowFirebaseWarning] = useState(false);
+  
+  // 檢查 Firebase 配置
+  useEffect(() => {
+    const apiKey = import.meta.env.VITE_FIREBASE_API_KEY;
+    const isUsingExampleConfig = !apiKey || 
+      apiKey === "your-api-key-here" || 
+      apiKey === "AIzaSyExample123456789";
+    
+    if (isUsingExampleConfig) {
+      setShowFirebaseWarning(true);
+    }
+  }, []);
   
   // 初始化 Firestore 連接
   useEffect(() => {
@@ -29,6 +43,12 @@ function App() {
   return (
     <Router>
       <div className="App">
+        {/* Firebase 配置警告 */}
+        <FirebaseConfigWarning 
+          isVisible={showFirebaseWarning}
+          onDismiss={() => setShowFirebaseWarning(false)}
+        />
+        
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/single-player" element={<SinglePlayer />} />

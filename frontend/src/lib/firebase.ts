@@ -13,6 +13,15 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:123456789:web:abcdef123456"
 };
 
+// 檢查 Firebase 配置是否為示例值
+const isUsingExampleConfig = firebaseConfig.apiKey === "your-api-key-here" || 
+  firebaseConfig.apiKey === "AIzaSyExample123456789";
+
+if (isUsingExampleConfig) {
+  console.warn('⚠️ Firebase 配置警告: 正在使用示例配置，雲端同步功能將無法正常工作');
+  console.warn('請到 Firebase Console 創建項目並更新 .env 文件中的配置');
+}
+
 // 初始化 Firebase
 const app = initializeApp(firebaseConfig);
 

@@ -86,6 +86,16 @@ const CloudSyncStatus: React.FC<CloudSyncStatusProps> = ({
       return '訪客模式';
     }
     
+    // 檢查 Firebase 配置
+    const apiKey = import.meta.env.VITE_FIREBASE_API_KEY;
+    const isUsingExampleConfig = !apiKey || 
+      apiKey === "your-api-key-here" || 
+      apiKey === "AIzaSyExample123456789";
+    
+    if (isUsingExampleConfig) {
+      return '配置錯誤';
+    }
+    
     if (!isFirestoreConnected) {
       return '連接失敗';
     }
@@ -103,6 +113,14 @@ const CloudSyncStatus: React.FC<CloudSyncStatusProps> = ({
 
   const getStatusColor = () => {
     if (currentUser?.isGuest) return 'text-gray-400';
+    
+    // 檢查 Firebase 配置
+    const apiKey = import.meta.env.VITE_FIREBASE_API_KEY;
+    const isUsingExampleConfig = !apiKey || 
+      apiKey === "your-api-key-here" || 
+      apiKey === "AIzaSyExample123456789";
+    
+    if (isUsingExampleConfig) return 'text-orange-400';
     if (!isFirestoreConnected) return 'text-red-400';
     if (!isCloudSyncEnabled) return 'text-yellow-400';
     return 'text-green-400';

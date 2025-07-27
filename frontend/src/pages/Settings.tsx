@@ -846,10 +846,58 @@ const Settings: React.FC = () => {
                     </div>
                     
                     <div className="bg-gray-700/50 rounded-lg p-4">
-                      <h3 className="text-lg font-semibold text-white mb-2">同步狀態</h3>
-                      <p className="text-sm text-gray-300 mb-4">
-                        最後同步時間：{new Date().toLocaleString('zh-TW')}
-                      </p>
+                      <h3 className="text-lg font-semibold text-white mb-2">Firebase 配置狀態</h3>
+                      {(() => {
+                        const apiKey = import.meta.env.VITE_FIREBASE_API_KEY;
+                        const isUsingExampleConfig = !apiKey || 
+                          apiKey === "your-api-key-here" || 
+                          apiKey === "AIzaSyExample123456789";
+                        
+                        if (isUsingExampleConfig) {
+                          return (
+                            <div className="bg-orange-900/30 border border-orange-500/30 rounded-lg p-4 mb-4">
+                              <div className="flex items-center mb-2">
+                                <Shield className="w-5 h-5 text-orange-400 mr-2" />
+                                <span className="text-orange-400 font-medium">配置需要設置</span>
+                              </div>
+                              <p className="text-sm text-orange-200 mb-3">
+                                目前使用的是示例 Firebase 配置，雲端同步功能無法正常工作。
+                              </p>
+                              <div className="text-xs text-orange-300">
+                                <p className="mb-2">請按照以下步驟設置：</p>
+                                <ol className="list-decimal list-inside space-y-1 ml-2">
+                                  <li>前往 Firebase Console 創建項目</li>
+                                  <li>啟用 Authentication 和 Firestore Database</li>
+                                  <li>更新 .env 文件中的配置值</li>
+                                  <li>重新啟動開發服務器</li>
+                                </ol>
+                              </div>
+                              <a
+                                href="https://console.firebase.google.com"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center mt-3 text-sm text-orange-300 hover:text-orange-200 underline"
+                              >
+                                <Globe className="w-4 h-4 mr-1" />
+                                前往 Firebase Console
+                              </a>
+                            </div>
+                          );
+                        } else {
+                          return (
+                            <div className="bg-green-900/30 border border-green-500/30 rounded-lg p-4 mb-4">
+                              <div className="flex items-center mb-2">
+                                <Cloud className="w-5 h-5 text-green-400 mr-2" />
+                                <span className="text-green-400 font-medium">Firebase 配置正常</span>
+                              </div>
+                              <p className="text-sm text-green-200">
+                                Firebase 配置已正確設置，雲端同步功能可正常使用。
+                              </p>
+                            </div>
+                          );
+                        }
+                      })()}
+                      
                       <div className="flex gap-3">
                         <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
                           立即同步
