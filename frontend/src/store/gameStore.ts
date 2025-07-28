@@ -48,6 +48,8 @@ export interface GameState {
   currentPiece: Tetromino | null;
   // 下一個方塊
   nextPiece: Tetromino | null;
+  // 預覽方塊隊列
+  nextPieces: Tetromino[];
   // 分數
   score: number;
   // 等級
@@ -136,11 +138,17 @@ const rotateMatrix = (matrix: number[][]): number[][] => {
   return rotated;
 };
 
+// 生成多個預覽方塊
+const generateNextPieces = (count: number): Tetromino[] => {
+  return Array(count).fill(null).map(() => generateRandomPiece());
+};
+
 export const useGameStore = create<GameStore>((set, get) => ({
   // 初始狀態
   board: createEmptyBoard(),
   currentPiece: null,
   nextPiece: null,
+  nextPieces: [],
   score: 0,
   level: 1,
   lines: 0,
@@ -149,13 +157,26 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   // 初始化遊戲
   initGame: () => {
+    // 從localStorage讀取設定，獲取預覽方塊數量
+    const savedSettings = localStorage.getItem('tetris-settings');
+    let nextPieceCount = 3; // 默認3個
+    if (savedSettings) {
+      try {
+        const settings = JSON.parse(savedSettings);
+        nextPieceCount = settings.nextPieceCount || 3;
+      } catch (err) {
+        console.error('Failed to load settings:', err);
+      }
+    }
+    
     const firstPiece = generateRandomPiece();
-    const secondPiece = generateRandomPiece();
+    const nextPieces = generateNextPieces(nextPieceCount);
     
     set({
       board: createEmptyBoard(),
       currentPiece: firstPiece,
-      nextPiece: secondPiece,
+      nextPiece: nextPieces[0] || null,
+      nextPieces: nextPieces,
       score: 0,
       level: 1,
       lines: 0,
@@ -268,7 +289,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   // 放置方塊
   placePiece: () => {
-    const { currentPiece, nextPiece, board } = get();
+    const { currentPiece, nextPieces, board } = get();
     if (!currentPiece) return;
 
     // 將當前方塊添加到遊戲板
@@ -297,12 +318,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const linesCleared = get().clearLines();
     get().updateScore(linesCleared);
 
-    // 生成新方塊
-    const newPiece = generateRandomPiece();
+    // 更新預覽方塊隊列
+    const newNextPieces = [...nextPieces.slice(1), generateRandomPiece()];
     
     set({
-      currentPiece: nextPiece,
-      nextPiece: newPiece
+      currentPiece: nextPieces[0] || null,
+      nextPiece: newNextPieces[0] || null,
+      nextPieces: newNextPieces
     });
   },
 

@@ -14,6 +14,7 @@ const GameInfo: React.FC<GameInfoProps> = ({ className }) => {
     level,
     lines,
     nextPiece,
+    nextPieces,
     gameStatus,
     startGame,
     pauseGame,
@@ -23,16 +24,18 @@ const GameInfo: React.FC<GameInfoProps> = ({ className }) => {
   
   const { currentUser, userStats } = useUserStore();
 
-  // 渲染下一個方塊預覽
-  const renderNextPiece = () => {
-    if (!nextPiece) return null;
+  // 渲染單個預覽方塊
+  const renderSinglePiece = (piece: any, index: number) => {
+    if (!piece) return null;
     
-    const { shape } = nextPiece;
+    const { shape } = piece;
     const maxSize = 4; // 最大預覽尺寸
     
     return (
-      <div className="bg-gray-800 rounded-lg p-3 border border-gray-600">
-        <h4 className="text-sm font-semibold text-gray-300 mb-2 text-center">下一個</h4>
+      <div key={index} className="bg-gray-800 rounded-lg p-2 border border-gray-600">
+        <h4 className="text-xs font-semibold text-gray-300 mb-1 text-center">
+          {index === 0 ? '下一個' : `第${index + 1}個`}
+        </h4>
         <div className="flex justify-center">
           <div className="grid gap-0.5" style={{ gridTemplateColumns: `repeat(${maxSize}, 1fr)` }}>
             {Array(maxSize).fill(null).map((_, y) => 
@@ -42,7 +45,7 @@ const GameInfo: React.FC<GameInfoProps> = ({ className }) => {
                   <div
                     key={`${y}-${x}`}
                     className={cn(
-                      'w-4 h-4 rounded-sm transition-colors',
+                      'w-3 h-3 rounded-sm transition-colors',
                       isActive 
                         ? 'bg-blue-500 shadow-sm border border-blue-400' 
                         : 'bg-transparent'
@@ -52,6 +55,20 @@ const GameInfo: React.FC<GameInfoProps> = ({ className }) => {
               })
             )}
           </div>
+        </div>
+      </div>
+    );
+  };
+
+  // 渲染多個預覽方塊
+  const renderNextPieces = () => {
+    if (!nextPieces || nextPieces.length === 0) return null;
+    
+    return (
+      <div className="space-y-2">
+        <h3 className="text-sm font-semibold text-gray-300 text-center">預覽方塊</h3>
+        <div className="space-y-2">
+          {nextPieces.map((piece, index) => renderSinglePiece(piece, index))}
         </div>
       </div>
     );
@@ -194,8 +211,8 @@ const GameInfo: React.FC<GameInfoProps> = ({ className }) => {
       {/* 遊戲統計 */}
       {renderStats()}
       
-      {/* 下一個方塊 */}
-      {renderNextPiece()}
+      {/* 預覽方塊 */}
+      {renderNextPieces()}
       
       {/* 遊戲控制 */}
       {renderGameControls()}
