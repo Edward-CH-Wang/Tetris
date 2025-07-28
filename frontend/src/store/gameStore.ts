@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { leaderboardService } from '../lib/leaderboard';
 
 // 俄羅斯方塊形狀定義
 export const TETRIS_SHAPES = {
@@ -201,8 +202,33 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   // 結束遊戲
-  gameOver: () => {
+  gameOver: async () => {
+    const { score, level, lines } = get();
     set({ gameStatus: 'gameOver' });
+    
+    // 嘗試更新排行榜（如果用戶已登入）
+    try {
+      // 這裡需要從 userStore 獲取用戶信息
+      const userStore = (window as any).userStore;
+      if (userStore && userStore.getState && userStore.getState().isAuthenticated) {
+        const { currentUser } = userStore.getState();
+        if (currentUser) {
+          await leaderboardService.updateUserBestScore(
+            currentUser.id,
+            currentUser.name,
+            currentUser.avatar,
+            {
+              score,
+              level,
+              lines,
+              gameType: 'single'
+            }
+          );
+        }
+      }
+    } catch (error) {
+      console.error('更新排行榜失敗:', error);
+    }
   },
 
   // 檢查碰撞

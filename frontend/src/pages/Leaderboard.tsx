@@ -17,69 +17,22 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { leaderboardService, LeaderboardEntry } from '../lib/leaderboard';
+import { toast } from 'sonner';
 
-// 模擬排行榜數據
-const mockLeaderboardData = {
-  singlePlayer: {
-    score: [
-      { id: '1', name: 'TetrisMaster', avatar: null, score: 1250000, level: 15, lines: 150, rank: 1 },
-      { id: '2', name: 'BlockBuster', avatar: null, score: 980000, level: 12, lines: 120, rank: 2 },
-      { id: '3', name: 'LineClearing', avatar: null, score: 850000, level: 11, lines: 110, rank: 3 },
-      { id: '4', name: 'SpeedRunner', avatar: null, score: 720000, level: 10, lines: 95, rank: 4 },
-      { id: '5', name: 'PuzzlePro', avatar: null, score: 650000, level: 9, lines: 85, rank: 5 }
-    ],
-    level: [
-      { id: '1', name: 'LevelKing', avatar: null, score: 800000, level: 20, lines: 200, rank: 1 },
-      { id: '2', name: 'HighClimber', avatar: null, score: 750000, level: 18, lines: 180, rank: 2 },
-      { id: '3', name: 'TowerBuilder', avatar: null, score: 700000, level: 16, lines: 160, rank: 3 },
-      { id: '4', name: 'SkyReacher', avatar: null, score: 650000, level: 15, lines: 150, rank: 4 },
-      { id: '5', name: 'CloudWalker', avatar: null, score: 600000, level: 14, lines: 140, rank: 5 }
-    ],
-    lines: [
-      { id: '1', name: 'LineMaster', avatar: null, score: 900000, level: 12, lines: 250, rank: 1 },
-      { id: '2', name: 'ClearingChamp', avatar: null, score: 850000, level: 11, lines: 230, rank: 2 },
-      { id: '3', name: 'RowDestroyer', avatar: null, score: 800000, level: 10, lines: 210, rank: 3 },
-      { id: '4', name: 'BlockEraser', avatar: null, score: 750000, level: 9, lines: 190, rank: 4 },
-      { id: '5', name: 'GridCleaner', avatar: null, score: 700000, level: 8, lines: 170, rank: 5 }
-    ]
-  },
-  multiplayer: {
-    wins: [
-      { id: '1', name: 'PvPKing', avatar: null, wins: 95, losses: 5, winRate: 95, rank: 1 },
-      { id: '2', name: 'BattleChamp', avatar: null, wins: 88, losses: 12, winRate: 88, rank: 2 },
-      { id: '3', name: 'DuelMaster', avatar: null, wins: 82, losses: 18, winRate: 82, rank: 3 },
-      { id: '4', name: 'FightPro', avatar: null, wins: 75, losses: 25, winRate: 75, rank: 4 },
-      { id: '5', name: 'WarriorAce', avatar: null, wins: 70, losses: 30, winRate: 70, rank: 5 }
-    ],
-    winRate: [
-      { id: '1', name: 'WinStreaker', avatar: null, wins: 48, losses: 2, winRate: 96, rank: 1 },
-      { id: '2', name: 'VictoryLord', avatar: null, wins: 90, losses: 10, winRate: 90, rank: 2 },
-      { id: '3', name: 'TriumphKing', avatar: null, wins: 85, losses: 15, winRate: 85, rank: 3 },
-      { id: '4', name: 'ConquerHero', avatar: null, wins: 80, losses: 20, winRate: 80, rank: 4 },
-      { id: '5', name: 'ChampionAce', avatar: null, wins: 75, losses: 25, winRate: 75, rank: 5 }
-    ]
-  }
-};
 
-interface LeaderboardEntry {
-  id: string;
-  name: string;
-  avatar: string | null;
-  score?: number;
-  level?: number;
-  lines?: number;
-  wins?: number;
-  losses?: number;
-  winRate?: number;
-  rank: number;
-}
 
 const Leaderboard: React.FC = () => {
   const navigate = useNavigate();
   const [activeCategory, setActiveCategory] = useState<'singlePlayer' | 'multiplayer'>('singlePlayer');
   const [activeType, setActiveType] = useState<string>('score');
   const [searchTerm, setSearchTerm] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [leaderboardData, setLeaderboardData] = useState<{
+    singlePlayer: { [key: string]: LeaderboardEntry[] };
+    multiplayer: { [key: string]: LeaderboardEntry[] };
+  }>({ singlePlayer: {}, multiplayer: {} });
+  const [error, setError] = useState<string | null>(null);
   
   const { currentUser, isAuthenticated } = useUserStore();
 
@@ -91,24 +44,60 @@ const Leaderboard: React.FC = () => {
     navigate('/');
   };
 
+  // 載入排行榜數據
+  const loadLeaderboardData = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const [singleScoreData, singleLevelData, singleLinesData, multiWinsData, multiWinRateData] = await Promise.all([
+        leaderboardService.getLeaderboard('single', 50, 'score'),
+        leaderboardService.getLeaderboard('single', 50, 'level'),
+        leaderboardService.getLeaderboard('single', 50, 'lines'),
+        leaderboardService.getLeaderboard('multiplayer', 50, 'wins'),
+        leaderboardService.getLeaderboard('multiplayer', 50, 'winRate')
+      ]);
+      
+      setLeaderboardData({
+        singlePlayer: {
+          score: singleScoreData,
+          level: singleLevelData,
+          lines: singleLinesData
+        },
+        multiplayer: {
+          wins: multiWinsData,
+          winRate: multiWinRateData
+        }
+      });
+    } catch (err) {
+      console.error('載入排行榜失敗:', err);
+      setError('載入排行榜失敗，請稍後再試');
+      toast.error('載入排行榜失敗');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleRefresh = async () => {
-    setIsLoading(true);
-    // 模擬 API 調用
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setIsLoading(false);
+    await loadLeaderboardData();
+    toast.success('排行榜已更新！');
   };
 
   const getCurrentData = (): LeaderboardEntry[] => {
-    const data = mockLeaderboardData[activeCategory][activeType as keyof typeof mockLeaderboardData.singlePlayer] || [];
+    const data = leaderboardData[activeCategory][activeType] || [];
     
     if (searchTerm) {
       return data.filter(entry => 
-        entry.name.toLowerCase().includes(searchTerm.toLowerCase())
+        entry.displayName.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
     
     return data;
   };
+
+  useEffect(() => {
+    loadLeaderboardData();
+  }, []);
 
   const getRankIcon = (rank: number) => {
     switch (rank) {
@@ -140,19 +129,14 @@ const Leaderboard: React.FC = () => {
     return num.toLocaleString();
   };
 
-  const getUserRank = () => {
-    if (!isAuthenticated || !currentUser) return null;
-    
-    const data = getCurrentData();
-    const userEntry = data.find(entry => entry.id === currentUser.id);
-    
-    if (userEntry) {
-      return userEntry.rank;
-    }
-    
-    // 如果用戶不在前 5 名，模擬一個排名
-    return Math.floor(Math.random() * 50) + 6;
-  };
+  const getUserRank = (): LeaderboardEntry | null => {
+     if (!isAuthenticated || !currentUser || currentUser.isGuest) return null;
+     
+     const data = getCurrentData();
+     const userEntry = data.find(entry => entry.userId === currentUser.id);
+     
+     return userEntry || null;
+   };
 
   const renderCategoryTabs = () => {
     return (
@@ -225,7 +209,7 @@ const Leaderboard: React.FC = () => {
   };
 
   const renderLeaderboardEntry = (entry: LeaderboardEntry, index: number) => {
-    const isCurrentUser = isAuthenticated && currentUser && entry.id === currentUser.id;
+    const isCurrentUser = isAuthenticated && currentUser && entry.userId === currentUser.id;
     
     return (
       <div 
@@ -262,7 +246,7 @@ const Leaderboard: React.FC = () => {
             
             <div>
               <div className="flex items-center gap-2">
-                <h4 className="font-semibold text-white">{entry.name}</h4>
+                <h4 className="font-semibold text-white">{entry.displayName}</h4>
                 {isCurrentUser && (
                   <span className="px-2 py-1 bg-blue-600 text-blue-100 text-xs rounded-full">
                     你
@@ -341,11 +325,11 @@ const Leaderboard: React.FC = () => {
           </div>
           
           <div className="text-right">
-            <p className="text-2xl font-bold text-white">#{userRank}</p>
-            <p className="text-sm text-blue-300">
-              {activeCategory === 'singlePlayer' ? '單人模式' : '多人對戰'}
-            </p>
-          </div>
+                   <p className="text-2xl font-bold text-white">#{getUserRank()?.rank}</p>
+                   <p className="text-sm text-blue-300">
+                     {activeCategory === 'singlePlayer' ? '單人模式' : '多人對戰'}
+                   </p>
+                 </div>
         </div>
       </div>
     );
@@ -426,9 +410,50 @@ const Leaderboard: React.FC = () => {
           </div>
 
           {/* 用戶排名卡片 */}
-          {renderUserRankCard() && (
-            <div className="mb-6">
-              {renderUserRankCard()}
+          {getUserRank() && (
+            <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 backdrop-blur-sm rounded-lg p-4 border border-blue-500/30 mb-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  {currentUser?.avatar ? (
+                    <img 
+                      src={currentUser.avatar} 
+                      alt={currentUser.name}
+                      className="w-10 h-10 rounded-full border-2 border-blue-400"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold">
+                      {currentUser?.name.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  
+                  <div>
+                    <h4 className="font-semibold text-white">{getUserRank()?.displayName}</h4>
+                    <p className="text-sm text-blue-300">您的排名</p>
+                  </div>
+                </div>
+                
+                <div className="text-right">
+                  <p className="text-2xl font-bold text-white">#{getUserRank()?.rank}</p>
+                  <p className="text-sm text-blue-300">
+                    {activeCategory === 'singlePlayer' ? '單人模式' : '多人對戰'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {isAuthenticated && currentUser?.isGuest && (
+            <div className="bg-gradient-to-r from-blue-500/20 to-purple-500/20 backdrop-blur-sm rounded-lg p-4 border border-blue-500/30 mb-6">
+              <div className="text-center">
+                <p className="text-white font-semibold mb-2">登入以查看你的排名</p>
+                <p className="text-white/60 text-sm mb-4">註冊帳號即可參與全球排行榜競爭</p>
+                <button
+                  onClick={() => navigate('/login')}
+                  className="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg hover:from-blue-600 hover:to-purple-600 transition-all duration-300"
+                >
+                  立即登入
+                </button>
+              </div>
             </div>
           )}
 
@@ -458,6 +483,16 @@ const Leaderboard: React.FC = () => {
               <div className="text-center py-12">
                 <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4" />
                 <p className="text-gray-400">載入中...</p>
+              </div>
+            ) : error ? (
+              <div className="text-center py-12">
+                <p className="text-red-400 mb-4">{error}</p>
+                <button
+                  onClick={loadLeaderboardData}
+                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                >
+                  重試
+                </button>
               </div>
             ) : currentData.length === 0 ? (
               <div className="text-center py-12">
