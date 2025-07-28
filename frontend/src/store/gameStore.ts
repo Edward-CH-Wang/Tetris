@@ -61,6 +61,8 @@ export interface GameState {
   gameStatus: 'idle' | 'playing' | 'paused' | 'gameOver';
   // 下降速度 (毫秒)
   dropSpeed: number;
+  // 遊戲開始時間
+  gameStartTime: Date | null;
 }
 
 export interface GameActions {
@@ -155,6 +157,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   lines: 0,
   gameStatus: 'idle',
   dropSpeed: 1000,
+  gameStartTime: null,
 
   // 初始化遊戲
   initGame: () => {
@@ -182,13 +185,17 @@ export const useGameStore = create<GameStore>((set, get) => ({
       level: 1,
       lines: 0,
       gameStatus: 'idle',
-      dropSpeed: 1000
+      dropSpeed: 1000,
+      gameStartTime: null
     });
   },
 
   // 開始遊戲
   startGame: () => {
-    set({ gameStatus: 'playing' });
+    set({ 
+      gameStatus: 'playing',
+      gameStartTime: new Date()
+    });
   },
 
   // 暫停遊戲
@@ -203,16 +210,30 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   // 結束遊戲
   gameOver: async () => {
-    const { score, level, lines } = get();
+    const { score, level, lines, gameStartTime } = get();
     set({ gameStatus: 'gameOver' });
     
-    // 嘗試更新排行榜（如果用戶已登入）
+    // 計算遊戲時長
+    const duration = gameStartTime ? Math.floor((Date.now() - gameStartTime.getTime()) / 1000) : 0;
+    
+    // 嘗試更新排行榜和添加遊戲記錄（如果用戶已登入）
     try {
       // 這裡需要從 userStore 獲取用戶信息
       const userStore = (window as any).userStore;
       if (userStore && userStore.getState && userStore.getState().isAuthenticated) {
-        const { currentUser } = userStore.getState();
+        const { currentUser, addGameRecord } = userStore.getState();
         if (currentUser) {
+          // 添加遊戲記錄到個人統計
+          addGameRecord({
+            gameType: 'single',
+            score,
+            level,
+            lines,
+            duration,
+            result: 'completed'
+          });
+          
+          // 更新排行榜
           await leaderboardService.updateUserBestScore(
             currentUser.id,
             currentUser.name,
@@ -227,7 +248,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         }
       }
     } catch (error) {
-      console.error('更新排行榜失敗:', error);
+      console.error('更新遊戲數據失敗:', error);
     }
   },
 

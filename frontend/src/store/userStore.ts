@@ -966,27 +966,9 @@ export const useUserStore = create<UserState>()(persist(
       const sessionLogoutFlag = sessionStorage.getItem('tetris-logout-flag');
       
       if (logoutFlag === 'true' || sessionLogoutFlag === 'true') {
-        // 清除所有登出標記和用戶數據
+        // 清除登出標記
         localStorage.removeItem('tetris-logout-flag');
         sessionStorage.removeItem('tetris-logout-flag');
-        localStorage.removeItem('tetris-user-store');
-        
-        // 額外清除措施，針對TRAE SOLO內建瀏覽器
-        try {
-          Object.keys(localStorage).forEach(key => {
-            if (key.includes('tetris') || key.includes('user')) {
-              localStorage.removeItem(key);
-            }
-          });
-          
-          Object.keys(sessionStorage).forEach(key => {
-            if (key.includes('tetris') || key.includes('user')) {
-              sessionStorage.removeItem(key);
-            }
-          });
-        } catch (e) {
-          console.warn('清除存儲時出錯:', e);
-        }
         
         // 返回一個函數來重置狀態
         return (state, error) => {
@@ -999,24 +981,16 @@ export const useUserStore = create<UserState>()(persist(
               userStats: getInitialStats(),
               achievements: DEFAULT_ACHIEVEMENTS.map(achievement => ({ ...achievement })),
               friends: [],
-              isLoading: false
+              isLoading: false,
+              isFirestoreConnected: false,
+              isCloudSyncEnabled: false,
+              lastSyncTime: null
             };
             
             useUserStore.setState(initialState);
             
-            // 針對TRAE SOLO的額外重置措施
-            setTimeout(() => {
-              useUserStore.setState(initialState);
-            }, 100);
-            
           } catch (resetError) {
             console.error('重置狀態時出錯:', resetError);
-            // 最後的保險措施
-            try {
-              window.location.reload();
-            } catch (reloadError) {
-              console.error('重新載入頁面失敗:', reloadError);
-            }
           }
         };
       }

@@ -18,7 +18,13 @@ function App() {
   // 初始化 Firebase 認證監聽
   useFirebaseAuth();
   
-  const { initializeFirestore } = useUserStore();
+  const userStore = useUserStore();
+  const { initializeFirestore } = userStore;
+  
+  // 將 userStore 暴露到全局 window 對象，供其他 store 使用
+  useEffect(() => {
+    (window as any).userStore = useUserStore;
+  }, []);
   const [showFirebaseWarning, setShowFirebaseWarning] = useState(false);
   
   // 檢查 Firebase 配置
