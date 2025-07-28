@@ -83,7 +83,7 @@ export interface UserState {
   loginWithGoogle: () => Promise<void>;
   logout: () => void;
   register: (email: string, password: string, name: string) => Promise<void>;
-  setUser: (user: User) => void;
+  setUser: (user: User) => Promise<void>;
   
   // 用戶資料管理方法
   updateProfile: (data: { name?: string; avatar?: string; email?: string; currentPassword?: string; newPassword?: string }) => Promise<void>;
@@ -778,7 +778,7 @@ export const useUserStore = create<UserState>()(persist(
     },
 
     // 設置用戶（用於Firebase認證狀態同步）
-    setUser: (user: User) => {
+    setUser: async (user: User) => {
       console.log('👤 設置用戶:', user);
       
       set({
@@ -787,18 +787,24 @@ export const useUserStore = create<UserState>()(persist(
         isLoading: false
       });
       
-      // 如果啟用雲端同步，自動載入雲端數據
-      const { isCloudSyncEnabled } = get();
-      if (isCloudSyncEnabled && !user.isGuest) {
-        console.log('🔄 自動載入雲端數據...');
-        get().loadFromCloud().catch(error => {
-          console.error('❌ 自動載入雲端數據失敗:', error);
-        });
+      // 對於非訪客用戶，先初始化 Firestore，然後載入雲端數據
+      if (!user.isGuest) {
+        try {
+          console.log('🔧 初始化 Firestore 連接...');
+          const isConnected = await get().initializeFirestore();
+          
+          if (isConnected) {
+            console.log('🔄 自動載入雲端數據...');
+            await get().loadFromCloud();
+            console.log('✅ 用戶數據載入完成');
+          } else {
+            console.warn('⚠️ Firestore 連接失敗，無法載入雲端數據');
+          }
+        } catch (error) {
+          console.error('❌ 設置用戶時發生錯誤:', error);
+        }
       } else {
-        console.log('⏭️ 跳過自動載入：', {
-          syncEnabled: isCloudSyncEnabled,
-          isGuest: user.isGuest
-        });
+        console.log('⏭️ 訪客用戶，跳過雲端數據載入');
       }
     },
 

@@ -11,7 +11,7 @@ export const useFirebaseAuth = () => {
   const { setUser, logout } = useUserStore();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged((firebaseUser) => {
+    const unsubscribe = onAuthStateChanged(async (firebaseUser) => {
       if (firebaseUser) {
         // 用戶已登入，同步到應用狀態
         const user: User = {
@@ -23,10 +23,12 @@ export const useFirebaseAuth = () => {
           createdAt: new Date()
         };
         
-        setUser(user);
+        console.log('🔥 Firebase 認證狀態變化：用戶登入', user.email);
+        await setUser(user);
       } else {
         // 用戶已登出，但不要觸發完整的logout流程
         // 因為這可能是由我們自己的logout函數觸發的
+        console.log('🔥 Firebase 認證狀態變化：用戶登出');
         const currentUser = useUserStore.getState().currentUser;
         if (currentUser && !currentUser.isGuest) {
           // 只有當前用戶不是訪客時才清除狀態
