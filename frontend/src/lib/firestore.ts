@@ -95,12 +95,15 @@ export const firestoreGameRecordService = {
   // 獲取用戶遊戲記錄
   async getUserGameRecords(userId: string, limitCount: number = 100): Promise<GameRecord[]> {
     try {
+      console.log('🔍 [DEBUG] 開始查詢用戶遊戲記錄:', { userId, limitCount });
+      
       const recordsRef = collection(db, COLLECTIONS.GAME_RECORDS);
+      
+      // 使用簡單查詢避免複合索引需求
       const q = query(
         recordsRef,
         where('userId', '==', userId),
-        orderBy('playedAt', 'desc'),
-        limit(limitCount)
+        limit(limitCount * 2) // 獲取更多記錄以便客戶端排序
       );
       
       const querySnapshot = await getDocs(q);
@@ -116,10 +119,57 @@ export const firestoreGameRecordService = {
         } as GameRecord);
       });
       
-      return records;
+      // 在客戶端進行排序和限制
+      const sortedRecords = records
+        .sort((a, b) => b.playedAt.getTime() - a.playedAt.getTime())
+        .slice(0, limitCount);
+      
+      console.log('✅ [DEBUG] 遊戲記錄查詢成功:', { 
+        totalFound: records.length, 
+        returned: sortedRecords.length 
+      });
+      
+      return sortedRecords;
     } catch (error) {
-      console.error('獲取遊戲記錄失敗:', error);
-      return [];
+      console.error('❌ [DEBUG] 獲取遊戲記錄失敗:', error);
+      
+      // 提供降級方案：如果查詢失敗，嘗試不使用任何排序
+      try {
+        console.log('🔄 [DEBUG] 嘗試降級查詢...');
+        const recordsRef = collection(db, COLLECTIONS.GAME_RECORDS);
+        const simpleQuery = query(
+          recordsRef,
+          where('userId', '==', userId)
+        );
+        
+        const querySnapshot = await getDocs(simpleQuery);
+        const records: GameRecord[] = [];
+        
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          records.push({
+            id: doc.id,
+            ...data,
+            createdAt: data.createdAt?.toDate() || new Date(),
+            playedAt: data.playedAt?.toDate() || new Date()
+          } as GameRecord);
+        });
+        
+        // 客戶端排序
+        const sortedRecords = records
+          .sort((a, b) => b.playedAt.getTime() - a.playedAt.getTime())
+          .slice(0, limitCount);
+        
+        console.log('✅ [DEBUG] 降級查詢成功:', { 
+          totalFound: records.length, 
+          returned: sortedRecords.length 
+        });
+        
+        return sortedRecords;
+      } catch (fallbackError) {
+        console.error('❌ [DEBUG] 降級查詢也失敗:', fallbackError);
+        return [];
+      }
     }
   },
 

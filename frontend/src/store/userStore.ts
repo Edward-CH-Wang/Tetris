@@ -513,8 +513,20 @@ export const useUserStore = create<UserState>()(persist(
 
     // 添加遊戲記錄
     addGameRecord: (recordData) => {
+      console.log('🎮 [DEBUG] 開始添加遊戲記錄:', recordData);
+      
       const { currentUser, gameRecords } = get();
-      if (!currentUser) return;
+      if (!currentUser) {
+        console.warn('⚠️ [DEBUG] 無法添加遊戲記錄：用戶未登入');
+        return;
+      }
+
+      console.log('👤 [DEBUG] 當前用戶:', {
+        id: currentUser.id,
+        name: currentUser.name,
+        isGuest: currentUser.isGuest
+      });
+      console.log('📊 [DEBUG] 當前遊戲記錄數量:', gameRecords.length);
 
       const now = new Date();
       const newRecord: GameRecord = {
@@ -525,22 +537,43 @@ export const useUserStore = create<UserState>()(persist(
         ...recordData
       };
 
+      console.log('📝 [DEBUG] 新遊戲記錄:', newRecord);
+
       const updatedRecords = [newRecord, ...gameRecords].slice(0, 100); // 保留最近100條記錄
+      
+      console.log('📋 [DEBUG] 更新後記錄數量:', updatedRecords.length);
       
       set({ gameRecords: updatedRecords });
       
+      // 驗證數據是否正確保存
+      const { gameRecords: savedRecords } = get();
+      console.log('✅ [DEBUG] 記錄已保存，當前總數:', savedRecords.length);
+      console.log('🔍 [DEBUG] 最新記錄:', savedRecords[0]);
+      
       // 更新統計數據
+      console.log('📈 [DEBUG] 開始更新統計數據...');
       get().updateUserStats();
       
       // 檢查成就
+      console.log('🏆 [DEBUG] 開始檢查成就...');
       get().checkAchievements();
       
       // 如果啟用雲端同步，自動同步到雲端
       const { isCloudSyncEnabled } = get();
+      console.log('☁️ [DEBUG] 雲端同步狀態:', {
+        enabled: isCloudSyncEnabled,
+        isGuest: currentUser.isGuest
+      });
+      
       if (isCloudSyncEnabled && !currentUser.isGuest) {
-        get().syncToCloud().catch(error => {
-          console.error('自動同步到雲端失敗:', error);
+        console.log('🔄 [DEBUG] 開始自動同步到雲端...');
+        get().syncToCloud().then(() => {
+          console.log('✅ [DEBUG] 自動同步到雲端成功');
+        }).catch(error => {
+          console.error('❌ [DEBUG] 自動同步到雲端失敗:', error);
         });
+      } else {
+        console.log('⏭️ [DEBUG] 跳過雲端同步');
       }
     },
 
@@ -779,7 +812,24 @@ export const useUserStore = create<UserState>()(persist(
 
     // 設置用戶（用於Firebase認證狀態同步）
     setUser: async (user: User) => {
-      console.log('👤 設置用戶:', user);
+      console.log('👤 [DEBUG] 設置用戶:', user);
+      console.log('🔍 [DEBUG] 用戶詳細信息:', {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        isGuest: user.isGuest,
+        createdAt: user.createdAt
+      });
+      
+      // 檢查當前狀態
+      const currentState = get();
+      console.log('📊 [DEBUG] 設置用戶前的狀態:', {
+        hasCurrentUser: !!currentState.currentUser,
+        isAuthenticated: currentState.isAuthenticated,
+        gameRecordsCount: currentState.gameRecords.length,
+        isFirestoreConnected: currentState.isFirestoreConnected,
+        isCloudSyncEnabled: currentState.isCloudSyncEnabled
+      });
       
       set({
         currentUser: user,
@@ -787,24 +837,42 @@ export const useUserStore = create<UserState>()(persist(
         isLoading: false
       });
       
+      console.log('✅ [DEBUG] 用戶狀態已更新');
+      
       // 對於非訪客用戶，先初始化 Firestore，然後載入雲端數據
       if (!user.isGuest) {
         try {
-          console.log('🔧 初始化 Firestore 連接...');
+          console.log('🔧 [DEBUG] 非訪客用戶，開始初始化 Firestore 連接...');
           const isConnected = await get().initializeFirestore();
           
+          console.log('🔗 [DEBUG] Firestore 連接結果:', isConnected);
+          
           if (isConnected) {
-            console.log('🔄 自動載入雲端數據...');
+            console.log('🔄 [DEBUG] Firestore 連接成功，開始載入雲端數據...');
             await get().loadFromCloud();
-            console.log('✅ 用戶數據載入完成');
+            
+            // 檢查載入後的狀態
+            const afterLoadState = get();
+            console.log('📈 [DEBUG] 雲端數據載入後的狀態:', {
+              gameRecordsCount: afterLoadState.gameRecords.length,
+              userStats: afterLoadState.userStats,
+              achievementsCount: afterLoadState.achievements.length,
+              lastSyncTime: afterLoadState.lastSyncTime
+            });
+            
+            console.log('✅ [DEBUG] 用戶數據載入完成');
           } else {
-            console.warn('⚠️ Firestore 連接失敗，無法載入雲端數據');
+            console.warn('⚠️ [DEBUG] Firestore 連接失敗，無法載入雲端數據');
           }
         } catch (error) {
-          console.error('❌ 設置用戶時發生錯誤:', error);
+          console.error('❌ [DEBUG] 設置用戶時發生錯誤:', error);
+          console.error('🔍 [DEBUG] 錯誤詳情:', {
+            message: error.message,
+            stack: error.stack
+          });
         }
       } else {
-        console.log('⏭️ 訪客用戶，跳過雲端數據載入');
+        console.log('⏭️ [DEBUG] 訪客用戶，跳過雲端數據載入');
       }
     },
 
@@ -898,10 +966,19 @@ export const useUserStore = create<UserState>()(persist(
 
     // 從雲端載入數據
     loadFromCloud: async () => {
-      const { currentUser, isCloudSyncEnabled } = get();
+      const { currentUser, isCloudSyncEnabled, gameRecords: localRecords } = get();
+      
+      console.log('🔄 [DEBUG] 開始從雲端載入數據...');
+      console.log('🔍 [DEBUG] 載入前檢查:', {
+        hasUser: !!currentUser,
+        userId: currentUser?.id,
+        isGuest: currentUser?.isGuest,
+        syncEnabled: isCloudSyncEnabled,
+        localRecordsCount: localRecords.length
+      });
       
       if (!currentUser || currentUser.isGuest || !isCloudSyncEnabled) {
-        console.log('⏭️ 跳過雲端載入：', {
+        console.log('⏭️ [DEBUG] 跳過雲端載入：', {
           hasUser: !!currentUser,
           isGuest: currentUser?.isGuest,
           syncEnabled: isCloudSyncEnabled
@@ -910,31 +987,53 @@ export const useUserStore = create<UserState>()(persist(
       }
 
       try {
-        console.log('🔍 正在從雲端載入用戶數據...', currentUser.id);
+        console.log('🔍 [DEBUG] 正在從雲端載入用戶數據...', currentUser.id);
         const cloudData = await firestoreDataSyncService.loadUserDataFromCloud(currentUser.id);
         
+        console.log('📡 [DEBUG] 雲端數據載入結果:', cloudData);
+        
         if (cloudData) {
-          console.log('📊 雲端數據載入成功:', {
+          console.log('📊 [DEBUG] 雲端數據載入成功:', {
             gameRecords: cloudData.gameRecords.length,
             userStats: cloudData.userStats,
             achievements: cloudData.achievements.length
           });
           
+          console.log('📝 [DEBUG] 雲端遊戲記錄詳情:', cloudData.gameRecords.slice(0, 3));
+          
+          const newAchievements = cloudData.achievements.length > 0 
+            ? cloudData.achievements 
+            : DEFAULT_ACHIEVEMENTS.map(achievement => ({ ...achievement }));
+          
+          console.log('🏆 [DEBUG] 處理後的成就數據:', newAchievements.length);
+          
           set({
             gameRecords: cloudData.gameRecords,
             userStats: cloudData.userStats,
-            achievements: cloudData.achievements.length > 0 
-              ? cloudData.achievements 
-              : DEFAULT_ACHIEVEMENTS.map(achievement => ({ ...achievement })),
+            achievements: newAchievements,
             lastSyncTime: new Date()
           });
           
-          console.log('✅ 數據已成功載入到本地狀態');
+          // 驗證數據是否正確設置
+          const afterSetState = get();
+          console.log('✅ [DEBUG] 數據設置後驗證:', {
+            gameRecordsCount: afterSetState.gameRecords.length,
+            userStats: afterSetState.userStats,
+            achievementsCount: afterSetState.achievements.length,
+            lastSyncTime: afterSetState.lastSyncTime
+          });
+          
+          console.log('✅ [DEBUG] 數據已成功載入到本地狀態');
         } else {
-          console.log('📭 雲端沒有找到用戶數據，使用預設值');
+          console.log('📭 [DEBUG] 雲端沒有找到用戶數據，使用預設值');
+          console.log('🔧 [DEBUG] 當前本地記錄數量:', localRecords.length);
         }
       } catch (error) {
-        console.error('❌ 從雲端載入數據失敗:', error);
+        console.error('❌ [DEBUG] 從雲端載入數據失敗:', error);
+        console.error('🔍 [DEBUG] 錯誤詳情:', {
+          message: error.message,
+          stack: error.stack
+        });
         throw error;
       }
     },
@@ -967,17 +1066,34 @@ export const useUserStore = create<UserState>()(persist(
       lastSyncTime: state.lastSyncTime
     }),
     onRehydrateStorage: () => {
+      console.log('🔄 [DEBUG] onRehydrateStorage 開始執行...');
+      
       // 檢查是否有登出標記
       const logoutFlag = localStorage.getItem('tetris-logout-flag');
       const sessionLogoutFlag = sessionStorage.getItem('tetris-logout-flag');
       
+      console.log('🔍 [DEBUG] 檢查登出標記:', {
+        logoutFlag,
+        sessionLogoutFlag
+      });
+      
       if (logoutFlag === 'true' || sessionLogoutFlag === 'true') {
+        console.log('🚪 [DEBUG] 發現登出標記，準備重置狀態...');
+        
         // 清除登出標記
         localStorage.removeItem('tetris-logout-flag');
         sessionStorage.removeItem('tetris-logout-flag');
         
+        console.log('🧹 [DEBUG] 登出標記已清除');
+        
         // 返回一個函數來重置狀態
         return (state, error) => {
+          console.log('🔄 [DEBUG] 執行狀態重置...', {
+            hasState: !!state,
+            hasError: !!error,
+            error: error?.message
+          });
+          
           try {
             // 強制重置為初始狀態，無論是否有錯誤
             const initialState = {
@@ -993,10 +1109,35 @@ export const useUserStore = create<UserState>()(persist(
               lastSyncTime: null
             };
             
+            console.log('🔧 [DEBUG] 設置初始狀態:', initialState);
+            
             useUserStore.setState(initialState);
             
+            console.log('✅ [DEBUG] 狀態重置完成');
+            
           } catch (resetError) {
-            console.error('重置狀態時出錯:', resetError);
+            console.error('❌ [DEBUG] 重置狀態時出錯:', resetError);
+          }
+        };
+      } else {
+        console.log('✅ [DEBUG] 沒有登出標記，正常載入狀態');
+        
+        // 返回一個函數來記錄正常的狀態恢復
+        return (state, error) => {
+          console.log('📊 [DEBUG] 狀態恢復完成:', {
+            hasState: !!state,
+            hasError: !!error,
+            gameRecordsCount: state?.gameRecords?.length || 0,
+            isAuthenticated: state?.isAuthenticated || false,
+            currentUser: state?.currentUser ? {
+              id: state.currentUser.id,
+              name: state.currentUser.name,
+              isGuest: state.currentUser.isGuest
+            } : null
+          });
+          
+          if (error) {
+            console.error('⚠️ [DEBUG] 狀態恢復時有錯誤:', error);
           }
         };
       }

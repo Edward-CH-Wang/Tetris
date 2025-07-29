@@ -23,8 +23,8 @@ function App() {
   
   // 將 userStore 暴露到全局 window 對象，供其他 store 使用
   useEffect(() => {
-    (window as any).userStore = useUserStore;
-  }, []);
+    (window as any).userStore = userStore;
+  }, [userStore]);
   const [showFirebaseWarning, setShowFirebaseWarning] = useState(false);
   
   // 檢查 Firebase 配置

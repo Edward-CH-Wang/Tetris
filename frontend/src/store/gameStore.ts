@@ -211,44 +211,92 @@ export const useGameStore = create<GameStore>((set, get) => ({
   // 結束遊戲
   gameOver: async () => {
     const { score, level, lines, gameStartTime } = get();
+    console.log('🎮 [DEBUG] 遊戲結束，開始處理數據...', {
+      score,
+      level,
+      lines,
+      gameStartTime
+    });
+    
     set({ gameStatus: 'gameOver' });
     
     // 計算遊戲時長
     const duration = gameStartTime ? Math.floor((Date.now() - gameStartTime.getTime()) / 1000) : 0;
+    console.log('⏱️ [DEBUG] 遊戲時長:', duration, '秒');
     
     // 嘗試更新排行榜和添加遊戲記錄（如果用戶已登入）
     try {
       // 這裡需要從 userStore 獲取用戶信息
       const userStore = (window as any).userStore;
-      if (userStore && userStore.getState && userStore.getState().isAuthenticated) {
-        const { currentUser, addGameRecord } = userStore.getState();
+      console.log('🔍 [DEBUG] 檢查 userStore:', {
+        exists: !!userStore,
+        isAuthenticated: userStore?.isAuthenticated,
+        hasCurrentUser: !!userStore?.currentUser
+      });
+      
+      if (userStore && userStore.isAuthenticated) {
+        const { currentUser, addGameRecord } = userStore;
+        
+        console.log('👤 [DEBUG] 用戶狀態:', {
+          isAuthenticated: userStore.isAuthenticated,
+          hasCurrentUser: !!currentUser,
+          userId: currentUser?.id,
+          userName: currentUser?.name,
+          isGuest: currentUser?.isGuest
+        });
+        
         if (currentUser) {
-          // 添加遊戲記錄到個人統計
-          addGameRecord({
-            gameType: 'single',
+          const gameRecord = {
+            gameType: 'single' as const,
             score,
             level,
             lines,
             duration,
-            result: 'completed'
-          });
+            result: 'completed' as const
+          };
+          
+          console.log('📝 [DEBUG] 準備添加遊戲記錄:', gameRecord);
+          
+          // 添加遊戲記錄到個人統計
+          addGameRecord(gameRecord);
+          
+          console.log('✅ [DEBUG] 遊戲記錄已添加，開始更新排行榜...');
           
           // 更新排行榜
+          const leaderboardData = {
+            score,
+            level,
+            lines,
+            gameType: 'single' as const
+          };
+          
+          console.log('🏆 [DEBUG] 準備更新排行榜:', {
+            userId: currentUser.id,
+            userName: currentUser.name,
+            avatar: currentUser.avatar,
+            data: leaderboardData
+          });
+          
           await leaderboardService.updateUserBestScore(
             currentUser.id,
             currentUser.name,
             currentUser.avatar,
-            {
-              score,
-              level,
-              lines,
-              gameType: 'single'
-            }
+            leaderboardData
           );
+          
+          console.log('🎯 [DEBUG] 排行榜更新完成');
+        } else {
+          console.warn('⚠️ [DEBUG] 無法處理遊戲數據：用戶未登入');
         }
+      } else {
+        console.warn('⚠️ [DEBUG] 無法處理遊戲數據：用戶未認證或 userStore 不可用');
       }
     } catch (error) {
-      console.error('更新遊戲數據失敗:', error);
+      console.error('❌ [DEBUG] 更新遊戲數據失敗:', error);
+      console.error('🔍 [DEBUG] 錯誤詳情:', {
+        message: error.message,
+        stack: error.stack
+      });
     }
   },
 
