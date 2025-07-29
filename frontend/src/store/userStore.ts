@@ -303,7 +303,7 @@ export const useUserStore = create<UserState>()(persist(
       } catch (error: any) {
         set({ isLoading: false });
         console.error('❌ Email 登入失敗:', error);
-        throw new Error(error.message || 'Email 登入失敗');
+        throw new Error(error instanceof Error ? error.message : 'Email 登入失敗');
       }
     },
 
@@ -347,7 +347,7 @@ export const useUserStore = create<UserState>()(persist(
       } catch (error: any) {
         set({ isLoading: false });
         console.error('❌ Google 登入失敗:', error);
-        throw new Error(error.message || 'Google 登入失敗');
+        throw new Error(error instanceof Error ? error.message : 'Google 登入失敗');
       }
     },
 
@@ -389,7 +389,7 @@ export const useUserStore = create<UserState>()(persist(
       } catch (error: any) {
         set({ isLoading: false });
         console.error('❌ 註冊失敗:', error);
-        throw new Error(error.message || '註冊失敗');
+        throw new Error(error instanceof Error ? error.message : '註冊失敗');
       }
     },
 
@@ -761,7 +761,7 @@ export const useUserStore = create<UserState>()(persist(
       } catch (error: any) {
         set({ 
           isLoading: false, 
-          error: error.message || '更新資料失敗' 
+          error: error instanceof Error ? error.message : '更新資料失敗' 
         });
         throw error;
       }
@@ -799,7 +799,7 @@ export const useUserStore = create<UserState>()(persist(
       } catch (error: any) {
         set({ 
           isLoading: false, 
-          error: error.message || '刪除帳戶失敗' 
+          error: error instanceof Error ? error.message : '刪除帳戶失敗' 
         });
         throw error;
       }
@@ -865,11 +865,11 @@ export const useUserStore = create<UserState>()(persist(
             console.warn('⚠️ [DEBUG] Firestore 連接失敗，無法載入雲端數據');
           }
         } catch (error) {
-          console.error('❌ [DEBUG] 設置用戶時發生錯誤:', error);
-          console.error('🔍 [DEBUG] 錯誤詳情:', {
-            message: error.message,
-            stack: error.stack
-          });
+          console.error('❌ [DEBUG] 同步用戶數據失敗:', error);
+        console.error('🔍 [DEBUG] 錯誤詳情:', {
+          message: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined
+        });
         }
       } else {
         console.log('⏭️ [DEBUG] 訪客用戶，跳過雲端數據載入');
@@ -1031,8 +1031,8 @@ export const useUserStore = create<UserState>()(persist(
       } catch (error) {
         console.error('❌ [DEBUG] 從雲端載入數據失敗:', error);
         console.error('🔍 [DEBUG] 錯誤詳情:', {
-          message: error.message,
-          stack: error.stack
+          message: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined
         });
         throw error;
       }
@@ -1091,7 +1091,7 @@ export const useUserStore = create<UserState>()(persist(
           console.log('🔄 [DEBUG] 執行狀態重置...', {
             hasState: !!state,
             hasError: !!error,
-            error: error?.message
+            error: error instanceof Error ? error.message : String(error)
           });
           
           try {

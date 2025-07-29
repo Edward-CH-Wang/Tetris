@@ -94,7 +94,7 @@ export const leaderboardService = {
         console.log('✅ [DEBUG] 主查詢成功，獲取到', entries.length, '條記錄');
         return entries;
       } catch (indexError) {
-        console.log('⚠️ [DEBUG] 主查詢失敗（可能缺少索引），嘗試降級查詢...', indexError.message);
+        console.log('⚠️ [DEBUG] 主查詢失敗（可能缺少索引），嘗試降級查詢...', indexError instanceof Error ? indexError.message : String(indexError));
         
         // 降級查詢：只使用 where 條件，客戶端排序
         const fallbackQuery = query(

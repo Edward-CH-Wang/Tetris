@@ -292,11 +292,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
         console.warn('⚠️ [DEBUG] 無法處理遊戲數據：用戶未認證或 userStore 不可用');
       }
     } catch (error) {
-      console.error('❌ [DEBUG] 更新遊戲數據失敗:', error);
-      console.error('🔍 [DEBUG] 錯誤詳情:', {
-        message: error.message,
-        stack: error.stack
-      });
+      console.error('❌ [DEBUG] 提交排行榜失敗:', error);
+        console.error('🔍 [DEBUG] 錯誤詳情:', {
+          message: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined
+        });
     }
   },
 
