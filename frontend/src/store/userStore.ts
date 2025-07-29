@@ -539,7 +539,22 @@ export const useUserStore = create<UserState>()(persist(
 
       console.log('📝 [DEBUG] 新遊戲記錄:', newRecord);
 
-      const updatedRecords = [newRecord, ...gameRecords].slice(0, 100); // 保留最近100條記錄
+      // 檢查是否已存在相同的記錄（基於時間戳和分數去重）
+      const isDuplicate = gameRecords.some(record => 
+        Math.abs(record.playedAt.getTime() - newRecord.playedAt.getTime()) < 1000 && // 1秒內
+        record.score === newRecord.score &&
+        record.level === newRecord.level &&
+        record.lines === newRecord.lines
+      );
+
+      if (isDuplicate) {
+        console.warn('⚠️ [DEBUG] 檢測到重複記錄，跳過添加');
+        return;
+      }
+
+      const updatedRecords = [newRecord, ...gameRecords]
+        .sort((a, b) => b.playedAt.getTime() - a.playedAt.getTime()) // 按時間排序
+        .slice(0, 100); // 保留最近100條記錄
       
       console.log('📋 [DEBUG] 更新後記錄數量:', updatedRecords.length);
       
@@ -586,24 +601,78 @@ export const useUserStore = create<UserState>()(persist(
     // 更新用戶統計
     updateUserStats: () => {
       const { gameRecords, currentUser } = get();
-      if (!currentUser || gameRecords.length === 0) return;
+      
+      console.log('📊 [DEBUG] 開始更新用戶統計...', {
+        hasUser: !!currentUser,
+        recordsCount: gameRecords.length
+      });
+      
+      if (!currentUser) {
+        console.log('⚠️ [DEBUG] 無用戶，跳過統計更新');
+        return;
+      }
 
       const userRecords = gameRecords.filter(record => record.userId === currentUser.id);
       
-      const totalGames = userRecords.length;
-      const totalWins = userRecords.filter(record => record.result === 'win').length;
-      const totalLosses = userRecords.filter(record => record.result === 'lose').length;
-      const highestScore = Math.max(...userRecords.map(record => record.score), 0);
-      const averageScore = totalGames > 0 ? Math.round(userRecords.reduce((sum, record) => sum + record.score, 0) / totalGames) : 0;
-      const totalPlayTime = userRecords.reduce((sum, record) => sum + record.duration, 0);
+      console.log('📊 [DEBUG] 用戶記錄篩選:', {
+        totalRecords: gameRecords.length,
+        userRecords: userRecords.length,
+        userId: currentUser.id
+      });
+      
+      if (userRecords.length === 0) {
+        const emptyStats: UserStats = {
+          totalGames: 0,
+          totalWins: 0,
+          totalLosses: 0,
+          highestScore: 0,
+          averageScore: 0,
+          totalPlayTime: 0,
+          winRate: 0,
+          currentStreak: 0,
+          bestStreak: 0
+        };
+        
+        console.log('📊 [DEBUG] 設置空統計數據:', emptyStats);
+        set({ userStats: emptyStats });
+        return;
+      }
+      
+      // 確保所有記錄都有有效的數值
+      const validRecords = userRecords.filter(record => 
+        record && 
+        typeof record.score === 'number' && 
+        typeof record.lines === 'number' && 
+        typeof record.level === 'number' && 
+        typeof record.duration === 'number' &&
+        !isNaN(record.score) &&
+        !isNaN(record.lines) &&
+        !isNaN(record.level) &&
+        !isNaN(record.duration)
+      );
+      
+      console.log('📊 [DEBUG] 有效記錄篩選:', {
+        total: userRecords.length,
+        valid: validRecords.length,
+        invalid: userRecords.length - validRecords.length
+      });
+      
+      const totalGames = validRecords.length;
+      const totalWins = validRecords.filter(record => record.result === 'win').length;
+      const totalLosses = validRecords.filter(record => record.result === 'lose').length;
+      const highestScore = totalGames > 0 ? Math.max(...validRecords.map(record => record.score || 0)) : 0;
+      const averageScore = totalGames > 0 ? Math.round(validRecords.reduce((sum, record) => sum + (record.score || 0), 0) / totalGames) : 0;
+      const totalPlayTime = validRecords.reduce((sum, record) => sum + (record.duration || 0), 0);
       const winRate = totalGames > 0 ? Math.round((totalWins / totalGames) * 100) : 0;
       
-      // 計算連勝
+      // 計算連勝（按時間排序）
+      const sortedRecords = [...validRecords].sort((a, b) => b.playedAt.getTime() - a.playedAt.getTime());
       let currentStreak = 0;
       let bestStreak = 0;
       let tempStreak = 0;
       
-      for (const record of userRecords) {
+      // 計算最佳連勝
+      for (const record of sortedRecords) {
         if (record.result === 'win') {
           tempStreak++;
           bestStreak = Math.max(bestStreak, tempStreak);
@@ -613,7 +682,7 @@ export const useUserStore = create<UserState>()(persist(
       }
       
       // 計算當前連勝（從最新記錄開始）
-      for (const record of userRecords) {
+      for (const record of sortedRecords) {
         if (record.result === 'win') {
           currentStreak++;
         } else {
@@ -632,8 +701,14 @@ export const useUserStore = create<UserState>()(persist(
         currentStreak,
         bestStreak
       };
+      
+      console.log('📊 [DEBUG] 計算完成的統計數據:', newStats);
 
       set({ userStats: newStats });
+      
+      // 驗證設置是否成功
+      const { userStats: updatedStats } = get();
+      console.log('✅ [DEBUG] 統計數據更新完成:', updatedStats);
     },
 
     // 獲取用戶統計
@@ -644,58 +719,118 @@ export const useUserStore = create<UserState>()(persist(
     // 檢查成就
     checkAchievements: () => {
       const { achievements, userStats, gameRecords, currentUser } = get();
-      if (!currentUser) return;
+      
+      console.log('🏆 [DEBUG] 開始檢查成就...', {
+        hasUser: !!currentUser,
+        achievementsCount: achievements.length,
+        recordsCount: gameRecords.length
+      });
+      
+      if (!currentUser) {
+        console.log('⚠️ [DEBUG] 無用戶，跳過成就檢查');
+        return;
+      }
 
       const userRecords = gameRecords.filter(record => record.userId === currentUser.id);
-      const updatedAchievements = [...achievements];
+      console.log('🎮 [DEBUG] 用戶遊戲記錄:', {
+        totalRecords: gameRecords.length,
+        userRecords: userRecords.length,
+        userId: currentUser.id
+      });
       
-      updatedAchievements.forEach(achievement => {
-        if (achievement.unlockedAt) return; // 已解鎖
+      const updatedAchievements = achievements.map(achievement => {
+        if (achievement.unlockedAt) {
+          console.log(`✅ [DEBUG] 成就已解鎖: ${achievement.name}`);
+          return achievement; // 已解鎖，保持原狀
+        }
         
         let shouldUnlock = false;
         let progress = 0;
+        let newAchievement = { ...achievement };
+        
+        console.log(`🔍 [DEBUG] 檢查成就: ${achievement.name} (${achievement.condition})`);
         
         switch (achievement.condition) {
           case 'complete_first_game':
+            progress = userRecords.length;
             shouldUnlock = userRecords.length >= 1;
+            console.log(`📊 [DEBUG] 首次遊戲: ${progress}/1`);
             break;
           case 'score_1000':
+            progress = userStats.highestScore;
             shouldUnlock = userStats.highestScore >= 1000;
+            console.log(`📊 [DEBUG] 分數1000: ${progress}/1000`);
             break;
           case 'score_5000':
+            progress = userStats.highestScore;
             shouldUnlock = userStats.highestScore >= 5000;
+            console.log(`📊 [DEBUG] 分數5000: ${progress}/5000`);
             break;
           case 'win_streak_5':
+            progress = userStats.bestStreak;
             shouldUnlock = userStats.bestStreak >= 5;
+            console.log(`📊 [DEBUG] 連勝5場: ${progress}/5`);
             break;
           case 'total_games_10':
             progress = userStats.totalGames;
             shouldUnlock = userStats.totalGames >= 10;
+            console.log(`📊 [DEBUG] 總遊戲10場: ${progress}/10`);
             break;
           case 'total_games_50':
             progress = userStats.totalGames;
             shouldUnlock = userStats.totalGames >= 50;
+            console.log(`📊 [DEBUG] 總遊戲50場: ${progress}/50`);
             break;
           case 'level_10':
-            shouldUnlock = userRecords.some(record => record.level >= 10);
+            const maxLevel = userRecords.length > 0 ? Math.max(...userRecords.map(record => record.level || 0)) : 0;
+            progress = maxLevel;
+            shouldUnlock = maxLevel >= 10;
+            console.log(`📊 [DEBUG] 等級10: ${progress}/10`);
             break;
           case 'multiplayer_win':
-            shouldUnlock = userRecords.some(record => record.gameType === 'multiplayer' && record.result === 'win');
+            const multiplayerWins = userRecords.filter(record => record.gameType === 'multiplayer' && record.result === 'win').length;
+            progress = multiplayerWins;
+            shouldUnlock = multiplayerWins > 0;
+            console.log(`📊 [DEBUG] 多人遊戲勝利: ${progress}/1`);
+            break;
+          default:
+            console.log(`⚠️ [DEBUG] 未知成就條件: ${achievement.condition}`);
             break;
         }
         
-        if (achievement.maxProgress) {
-          achievement.progress = Math.min(progress, achievement.maxProgress);
+        // 更新進度
+        if (achievement.maxProgress && achievement.maxProgress > 0) {
+          newAchievement.progress = Math.min(progress, achievement.maxProgress);
+        } else {
+          newAchievement.progress = progress;
         }
         
+        // 檢查是否應該解鎖
         if (shouldUnlock && !achievement.unlockedAt) {
-          achievement.unlockedAt = new Date();
+          newAchievement.unlockedAt = new Date();
+          console.log(`🎉 [DEBUG] 成就解鎖: ${achievement.name}`);
           // 這裡可以顯示成就解鎖通知
-          console.log(`🎉 成就解鎖: ${achievement.name}`);
         }
+        
+        console.log(`📈 [DEBUG] 成就更新: ${achievement.name} - 進度: ${newAchievement.progress}, 已解鎖: ${!!newAchievement.unlockedAt}`);
+        
+        return newAchievement;
+      });
+      
+      console.log('🏆 [DEBUG] 成就檢查完成:', {
+        total: updatedAchievements.length,
+        unlocked: updatedAchievements.filter(a => a.unlockedAt).length,
+        newlyUnlocked: updatedAchievements.filter(a => a.unlockedAt && !achievements.find(orig => orig.id === a.id)?.unlockedAt).length
       });
       
       set({ achievements: updatedAchievements });
+      
+      // 驗證設置是否成功
+      const { achievements: finalAchievements } = get();
+      console.log('✅ [DEBUG] 成就狀態更新完成:', {
+        total: finalAchievements.length,
+        unlocked: finalAchievements.filter(a => a.unlockedAt).length
+      });
     },
 
     // 解鎖成就
@@ -917,8 +1052,18 @@ export const useUserStore = create<UserState>()(persist(
     syncToCloud: async () => {
       const { currentUser, gameRecords, userStats, achievements, isCloudSyncEnabled } = get();
       
+      console.log('☁️ [DEBUG] 開始同步到雲端...');
+      console.log('🔍 [DEBUG] 同步前檢查:', {
+        hasUser: !!currentUser,
+        userId: currentUser?.id,
+        isGuest: currentUser?.isGuest,
+        syncEnabled: isCloudSyncEnabled,
+        recordsCount: gameRecords.length,
+        achievementsCount: achievements.length
+      });
+      
       if (!currentUser || currentUser.isGuest || !isCloudSyncEnabled) {
-        console.log('⏭️ 跳過雲端同步：', {
+        console.log('⏭️ [DEBUG] 跳過雲端同步：', {
           hasUser: !!currentUser,
           isGuest: currentUser?.isGuest,
           syncEnabled: isCloudSyncEnabled
@@ -927,11 +1072,68 @@ export const useUserStore = create<UserState>()(persist(
       }
 
       try {
-        console.log('☁️ 開始同步數據到雲端...', {
-          userId: currentUser.id,
-          gameRecords: gameRecords.length,
+        console.log('📤 [DEBUG] 正在同步用戶數據到雲端...', currentUser.id);
+        
+        // 先載入雲端現有數據進行合併
+        const cloudData = await firestoreDataSyncService.loadUserDataFromCloud(currentUser.id);
+        
+        let finalGameRecords = gameRecords;
+        let finalAchievements = achievements;
+        
+        if (cloudData) {
+          // 合併遊戲記錄，避免重複
+          const allRecords = [...gameRecords, ...cloudData.gameRecords];
+          finalGameRecords = allRecords.filter((record, index, arr) => {
+            return arr.findIndex(r => 
+              r.id === record.id || 
+              (Math.abs(r.playedAt.getTime() - record.playedAt.getTime()) < 1000 &&
+               r.score === record.score &&
+               r.level === record.level &&
+               r.lines === record.lines)
+            ) === index;
+          }).sort((a, b) => b.playedAt.getTime() - a.playedAt.getTime()).slice(0, 100);
+          
+          // 合併成就，保留最佳進度
+          finalAchievements = DEFAULT_ACHIEVEMENTS.map(defaultAchievement => {
+            const localAchievement = achievements.find(a => a.id === defaultAchievement.id);
+            const cloudAchievement = cloudData.achievements.find(a => a.id === defaultAchievement.id);
+            
+            if (localAchievement && cloudAchievement) {
+              if (localAchievement.unlockedAt && !cloudAchievement.unlockedAt) {
+                return localAchievement;
+              } else if (!localAchievement.unlockedAt && cloudAchievement.unlockedAt) {
+                return cloudAchievement;
+              } else if (localAchievement.unlockedAt && cloudAchievement.unlockedAt) {
+                return localAchievement.unlockedAt <= cloudAchievement.unlockedAt ? localAchievement : cloudAchievement;
+              } else {
+                const localProgress = localAchievement.progress || 0;
+                const cloudProgress = cloudAchievement.progress || 0;
+                return localProgress >= cloudProgress ? localAchievement : cloudAchievement;
+              }
+            } else if (localAchievement) {
+              return localAchievement;
+            } else if (cloudAchievement) {
+              return cloudAchievement;
+            } else {
+              return { ...defaultAchievement };
+            }
+          });
+          
+          console.log('🔄 [DEBUG] 數據合併完成:', {
+            originalRecords: gameRecords.length,
+            cloudRecords: cloudData.gameRecords.length,
+            finalRecords: finalGameRecords.length,
+            originalAchievements: achievements.filter(a => a.unlockedAt).length,
+            cloudAchievements: cloudData.achievements.filter(a => a.unlockedAt).length,
+            finalAchievements: finalAchievements.filter(a => a.unlockedAt).length
+          });
+        }
+        
+        console.log('📊 [DEBUG] 同步數據詳情:', {
+          gameRecords: finalGameRecords.length,
           userStats,
-          achievements: achievements.length
+          achievements: finalAchievements.length,
+          unlockedAchievements: finalAchievements.filter(a => a.unlockedAt).length
         });
         
         // 創建或更新用戶資料
@@ -946,27 +1148,37 @@ export const useUserStore = create<UserState>()(persist(
         };
         
         await firestoreUserService.createOrUpdateUser(firestoreUser);
-        console.log('👤 用戶資料同步完成');
+        console.log('👤 [DEBUG] 用戶資料同步完成');
         
-        // 同步遊戲數據
+        // 同步合併後的遊戲數據
         await firestoreDataSyncService.syncUserDataToCloud(currentUser.id, {
-          gameRecords,
+          gameRecords: finalGameRecords,
           userStats,
-          achievements
+          achievements: finalAchievements
         });
-        console.log('🎮 遊戲數據同步完成');
+        console.log('🎮 [DEBUG] 遊戲數據同步完成');
         
-        set({ lastSyncTime: new Date() });
-        console.log('✅ 數據同步到雲端成功');
+        // 更新本地狀態為合併後的數據
+        set({ 
+          gameRecords: finalGameRecords,
+          achievements: finalAchievements,
+          lastSyncTime: new Date() 
+        });
+        
+        console.log('✅ [DEBUG] 數據已成功同步到雲端');
       } catch (error) {
-        console.error('❌ 同步到雲端失敗:', error);
+        console.error('❌ [DEBUG] 同步到雲端失敗:', error);
+        console.error('🔍 [DEBUG] 錯誤詳情:', {
+          message: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined
+        });
         throw error;
       }
     },
 
     // 從雲端載入數據
     loadFromCloud: async () => {
-      const { currentUser, isCloudSyncEnabled, gameRecords: localRecords } = get();
+      const { currentUser, isCloudSyncEnabled, gameRecords: localRecords, achievements: localAchievements } = get();
       
       console.log('🔄 [DEBUG] 開始從雲端載入數據...');
       console.log('🔍 [DEBUG] 載入前檢查:', {
@@ -974,7 +1186,8 @@ export const useUserStore = create<UserState>()(persist(
         userId: currentUser?.id,
         isGuest: currentUser?.isGuest,
         syncEnabled: isCloudSyncEnabled,
-        localRecordsCount: localRecords.length
+        localRecordsCount: localRecords.length,
+        localAchievementsCount: localAchievements.length
       });
       
       if (!currentUser || currentUser.isGuest || !isCloudSyncEnabled) {
@@ -999,20 +1212,68 @@ export const useUserStore = create<UserState>()(persist(
             achievements: cloudData.achievements.length
           });
           
-          console.log('📝 [DEBUG] 雲端遊戲記錄詳情:', cloudData.gameRecords.slice(0, 3));
+          // 合併遊戲記錄，去除重複
+          const allRecords = [...localRecords, ...cloudData.gameRecords];
+          const uniqueRecords = allRecords.filter((record, index, arr) => {
+            return arr.findIndex(r => 
+              r.id === record.id || 
+              (Math.abs(r.playedAt.getTime() - record.playedAt.getTime()) < 1000 &&
+               r.score === record.score &&
+               r.level === record.level &&
+               r.lines === record.lines)
+            ) === index;
+          }).sort((a, b) => b.playedAt.getTime() - a.playedAt.getTime()).slice(0, 100);
           
-          const newAchievements = cloudData.achievements.length > 0 
-            ? cloudData.achievements 
-            : DEFAULT_ACHIEVEMENTS.map(achievement => ({ ...achievement }));
+          console.log('📝 [DEBUG] 合併後遊戲記錄:', {
+            local: localRecords.length,
+            cloud: cloudData.gameRecords.length,
+            merged: uniqueRecords.length
+          });
           
-          console.log('🏆 [DEBUG] 處理後的成就數據:', newAchievements.length);
+          // 智能合併成就，保留進度較高的版本
+          const mergedAchievements = DEFAULT_ACHIEVEMENTS.map(defaultAchievement => {
+            const localAchievement = localAchievements.find(a => a.id === defaultAchievement.id);
+            const cloudAchievement = cloudData.achievements.find(a => a.id === defaultAchievement.id);
+            
+            // 如果雲端和本地都有，選擇進度更高或已解鎖的版本
+            if (localAchievement && cloudAchievement) {
+              if (localAchievement.unlockedAt && !cloudAchievement.unlockedAt) {
+                return localAchievement;
+              } else if (!localAchievement.unlockedAt && cloudAchievement.unlockedAt) {
+                return cloudAchievement;
+              } else if (localAchievement.unlockedAt && cloudAchievement.unlockedAt) {
+                // 都已解鎖，選擇解鎖時間較早的
+                return localAchievement.unlockedAt <= cloudAchievement.unlockedAt ? localAchievement : cloudAchievement;
+              } else {
+                // 都未解鎖，選擇進度較高的
+                const localProgress = localAchievement.progress || 0;
+                const cloudProgress = cloudAchievement.progress || 0;
+                return localProgress >= cloudProgress ? localAchievement : cloudAchievement;
+              }
+            } else if (localAchievement) {
+              return localAchievement;
+            } else if (cloudAchievement) {
+              return cloudAchievement;
+            } else {
+              return { ...defaultAchievement };
+            }
+          });
+          
+          console.log('🏆 [DEBUG] 成就合併結果:', {
+            local: localAchievements.filter(a => a.unlockedAt).length,
+            cloud: cloudData.achievements.filter(a => a.unlockedAt).length,
+            merged: mergedAchievements.filter(a => a.unlockedAt).length
+          });
           
           set({
-            gameRecords: cloudData.gameRecords,
+            gameRecords: uniqueRecords,
             userStats: cloudData.userStats,
-            achievements: newAchievements,
+            achievements: mergedAchievements,
             lastSyncTime: new Date()
           });
+          
+          // 重新計算統計數據以確保一致性
+          get().updateUserStats();
           
           // 驗證數據是否正確設置
           const afterSetState = get();
@@ -1020,6 +1281,7 @@ export const useUserStore = create<UserState>()(persist(
             gameRecordsCount: afterSetState.gameRecords.length,
             userStats: afterSetState.userStats,
             achievementsCount: afterSetState.achievements.length,
+            unlockedAchievements: afterSetState.achievements.filter(a => a.unlockedAt).length,
             lastSyncTime: afterSetState.lastSyncTime
           });
           
