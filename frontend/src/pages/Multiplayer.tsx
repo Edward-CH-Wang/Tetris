@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useMultiplayerStore } from '../store/multiplayerStore';
 import { useUserStore } from '../store/userStore';
 import { useGameStore } from '../store/gameStore';
@@ -22,6 +23,7 @@ import { toast } from 'sonner';
 import { cn } from '../lib/utils';
 
 const Multiplayer: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'quickMatch' | 'rooms'>('quickMatch');
   const [roomName, setRoomName] = useState('');
@@ -69,7 +71,7 @@ const Multiplayer: React.FC = () => {
   // 自動連接
   useEffect(() => {
     if (!isAuthenticated) {
-      toast.error('請先登入以使用多人對戰功能');
+      toast.error(t('multiplayer.loginRequired'));
       navigate('/');
       return;
     }
@@ -112,9 +114,9 @@ const Multiplayer: React.FC = () => {
       });
       
       toast.success(
-        isWinner ? '恭喜獲勝！' : '遊戲結束',
+        isWinner ? t('multiplayer.congratulations') : t('multiplayer.gameOver'),
         {
-          description: `最終分數：${score.toLocaleString()}`
+          description: t('multiplayer.finalScore', { score: score.toLocaleString() })
         }
       );
     }
@@ -190,13 +192,13 @@ const Multiplayer: React.FC = () => {
         {isConnected ? (
           <>
             <Wifi className="w-4 h-4 text-green-400" />
-            <span className="text-green-400 text-sm">已連接</span>
+            <span className="text-green-400 text-sm">{t('multiplayer.connected')}</span>
           </>
         ) : (
           <>
             <WifiOff className="w-4 h-4 text-red-400" />
             <span className="text-red-400 text-sm">
-              {connectionStatus === 'connecting' ? '連接中...' : '未連接'}
+              {connectionStatus === 'connecting' ? t('multiplayer.connecting') : t('multiplayer.disconnected')}
             </span>
           </>
         )}
@@ -209,23 +211,23 @@ const Multiplayer: React.FC = () => {
     return (
       <div className="space-y-6">
         <div className="text-center">
-          <h3 className="text-2xl font-bold text-white mb-2">快速匹配</h3>
-          <p className="text-gray-300">系統將自動為您匹配合適的對手</p>
+          <h3 className="text-2xl font-bold text-white mb-2">{t('multiplayer.quickMatch')}</h3>
+          <p className="text-gray-300">{t('multiplayer.autoMatchDescription')}</p>
         </div>
         
         {isSearching ? (
           <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-8 border border-gray-700 text-center">
             <div className="animate-spin w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4" />
-            <h4 className="text-lg font-semibold text-white mb-2">搜索對手中...</h4>
+            <h4 className="text-lg font-semibold text-white mb-2">{t('multiplayer.searchingOpponent')}</h4>
             <div className="flex items-center justify-center gap-2 text-gray-300 mb-4">
               <Clock className="w-4 h-4" />
-              <span>已搜索 {formatTime(searchDuration)}</span>
+              <span>{t('multiplayer.searchDuration', { duration: formatTime(searchDuration) })}</span>
             </div>
             <button
               onClick={handleQuickMatch}
               className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg transition-colors"
             >
-              取消搜索
+              {t('multiplayer.cancelSearch')}
             </button>
           </div>
         ) : (
@@ -236,7 +238,7 @@ const Multiplayer: React.FC = () => {
               className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-semibold py-4 px-8 rounded-lg transition-colors flex items-center gap-3 mx-auto"
             >
               <Search className="w-5 h-5" />
-              開始匹配
+              {t('multiplayer.startMatch')}
             </button>
           </div>
         )}
@@ -249,27 +251,27 @@ const Multiplayer: React.FC = () => {
     return (
       <div className="space-y-6">
         <div className="flex justify-between items-center">
-          <h3 className="text-2xl font-bold text-white">房間列表</h3>
+          <h3 className="text-2xl font-bold text-white">{t('multiplayer.roomList')}</h3>
           <button
             onClick={() => setShowCreateRoom(true)}
             disabled={!isConnected}
             className="bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
-            創建房間
+            {t('multiplayer.createRoom')}
           </button>
         </div>
         
         {/* 創建房間對話框 */}
         {showCreateRoom && (
           <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-6 border border-gray-700">
-            <h4 className="text-lg font-semibold text-white mb-4">創建新房間</h4>
+            <h4 className="text-lg font-semibold text-white mb-4">{t('multiplayer.createNewRoom')}</h4>
             <div className="flex gap-3">
               <input
                 type="text"
                 value={roomName}
                 onChange={(e) => setRoomName(e.target.value)}
-                placeholder="輸入房間名稱"
+                placeholder={t('multiplayer.enterRoomName')}
                 className="flex-1 bg-gray-700 text-white px-4 py-2 rounded-lg border border-gray-600 focus:border-blue-500 focus:outline-none"
                 maxLength={20}
               />
@@ -278,7 +280,7 @@ const Multiplayer: React.FC = () => {
                 disabled={!roomName.trim()}
                 className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-6 py-2 rounded-lg transition-colors"
               >
-                創建
+                {t('common.confirm')}
               </button>
               <button
                 onClick={() => {
@@ -287,7 +289,7 @@ const Multiplayer: React.FC = () => {
                 }}
                 className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg transition-colors"
               >
-                取消
+                {t('common.cancel')}
               </button>
             </div>
           </div>
@@ -298,8 +300,8 @@ const Multiplayer: React.FC = () => {
           {availableRooms.length === 0 ? (
             <div className="text-center py-8 text-gray-400">
               <Users className="w-12 h-12 mx-auto mb-3 opacity-50" />
-              <p>目前沒有可用的房間</p>
-              <p className="text-sm">創建一個新房間開始遊戲吧！</p>
+              <p>{t('multiplayer.noAvailableRooms')}</p>
+              <p className="text-sm">{t('multiplayer.createRoomToStart')}</p>
             </div>
           ) : (
             availableRooms.map((room) => (
@@ -310,19 +312,14 @@ const Multiplayer: React.FC = () => {
                 <div>
                   <h5 className="font-semibold text-white">{room.name}</h5>
                   <div className="flex items-center gap-4 text-sm text-gray-300">
-                    <span>玩家：{room.players.length}/{room.maxPlayers}</span>
+                    <span>{t('multiplayer.players')}: {room.players.length}/{room.maxPlayers}</span>
                     <span className={cn(
                       'px-2 py-1 rounded-full text-xs',
                       room.gameStatus === 'waiting' ? 'bg-green-600 text-green-100' :
                       room.gameStatus === 'playing' ? 'bg-blue-600 text-blue-100' :
                       'bg-gray-600 text-gray-100'
                     )}>
-                      {{
-                        waiting: '等待中',
-                        starting: '準備開始',
-                        playing: '遊戲中',
-                        finished: '已結束'
-                      }[room.gameStatus]}
+                      {t(`multiplayer.status.${room.gameStatus}`)}
                     </span>
                   </div>
                 </div>
@@ -331,7 +328,7 @@ const Multiplayer: React.FC = () => {
                   disabled={room.players.length >= room.maxPlayers || room.gameStatus !== 'waiting'}
                   className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg transition-colors"
                 >
-                  加入
+                  {t('multiplayer.joinRoom')}
                 </button>
               </div>
             ))
@@ -359,7 +356,7 @@ const Multiplayer: React.FC = () => {
               onClick={handleLeaveRoom}
               className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors"
             >
-              離開房間
+              {t('multiplayer.leaveRoom')}
             </button>
           </div>
           
@@ -396,10 +393,10 @@ const Multiplayer: React.FC = () => {
                         'text-xs px-2 py-1 rounded-full',
                         player.isReady ? 'bg-green-600 text-green-100' : 'bg-gray-600 text-gray-100'
                       )}>
-                        {player.isReady ? '準備就緒' : '未準備'}
+                        {player.isReady ? t('multiplayer.ready') : t('multiplayer.notReady')}
                       </span>
                       {player.id === currentPlayer?.id && (
-                        <span className="text-xs text-blue-400">(你)</span>
+                        <span className="text-xs text-blue-400">({t('multiplayer.you')})</span>
                       )}
                     </div>
                   </div>
@@ -419,7 +416,7 @@ const Multiplayer: React.FC = () => {
                   : 'bg-green-600 hover:bg-green-700 text-white'
               )}
             >
-              {currentPlayer?.isReady ? '取消準備' : '準備就緒'}
+              {currentPlayer?.isReady ? t('multiplayer.cancelReady') : t('multiplayer.getReady')}
             </button>
             
             {isHost && (
@@ -428,14 +425,14 @@ const Multiplayer: React.FC = () => {
                 disabled={!canStart}
                 className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-6 py-2 rounded-lg transition-colors font-medium"
               >
-                開始遊戲
+                {t('multiplayer.startGame')}
               </button>
             )}
           </div>
           
           {!canStart && (
             <p className="text-yellow-400 text-sm mt-2">
-              {room.players.length < 2 ? '等待其他玩家加入...' : '等待所有玩家準備就緒...'}
+              {room.players.length < 2 ? t('multiplayer.waitingForPlayers') : t('multiplayer.waitingForReady')}
             </p>
           )}
         </div>
@@ -460,7 +457,7 @@ const Multiplayer: React.FC = () => {
               className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
-              返回
+              {t('common.back')}
             </button>
             
             <button
@@ -468,7 +465,7 @@ const Multiplayer: React.FC = () => {
               className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
             >
               <Home className="w-4 h-4" />
-              首頁
+              {t('common.home')}
             </button>
           </div>
           
@@ -476,7 +473,7 @@ const Multiplayer: React.FC = () => {
             <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-600 rounded-lg flex items-center justify-center">
               <Users className="w-4 h-4 text-white" />
             </div>
-            <h1 className="text-xl font-bold text-white">多人對戰</h1>
+            <h1 className="text-xl font-bold text-white">{t('multiplayer.title')}</h1>
           </div>
           
           {/* 連接狀態和用戶信息 */}
@@ -517,14 +514,14 @@ const Multiplayer: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* 自己的遊戲板 */}
                   <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-4 border border-gray-700">
-                    <h4 className="text-center text-white font-semibold mb-2">你</h4>
+                    <h4 className="text-center text-white font-semibold mb-2">{t('multiplayer.you')}</h4>
                     <GameBoard isMultiplayer={true} />
                   </div>
                   
                   {/* 對手的遊戲板 */}
                   <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-4 border border-gray-700">
                     <h4 className="text-center text-white font-semibold mb-2">
-                      {gameState.opponent?.user.name || '對手'}
+                      {gameState.opponent?.user.name || t('multiplayer.opponent')}
                     </h4>
                     <GameBoard isMultiplayer={true} isOpponent={true} />
                   </div>
@@ -537,7 +534,7 @@ const Multiplayer: React.FC = () => {
                   {/* 對手信息 */}
                   {gameState.opponent && (
                     <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-4 border border-gray-700">
-                      <h4 className="text-lg font-semibold text-white mb-3">對手信息</h4>
+                      <h4 className="text-lg font-semibold text-white mb-3">{t('multiplayer.opponentInfo')}</h4>
                       <div className="flex items-center gap-3">
                         {gameState.opponent.user.avatar ? (
                           <img 
@@ -552,7 +549,7 @@ const Multiplayer: React.FC = () => {
                         )}
                         <div>
                           <div className="text-white font-medium">{gameState.opponent.user.name}</div>
-                          <div className="text-sm text-gray-400">分數：{gameState.opponent.score || 0}</div>
+                          <div className="text-sm text-gray-400">{t('multiplayer.score')}: {gameState.opponent.score || 0}</div>
                         </div>
                       </div>
                     </div>
@@ -578,7 +575,7 @@ const Multiplayer: React.FC = () => {
                         : 'text-gray-300 hover:text-white'
                     )}
                   >
-                    快速匹配
+                    {t('multiplayer.quickMatch')}
                   </button>
                   <button
                     onClick={() => {
@@ -592,7 +589,7 @@ const Multiplayer: React.FC = () => {
                         : 'text-gray-300 hover:text-white'
                     )}
                   >
-                    房間列表
+                    {t('multiplayer.roomList')}
                   </button>
                 </div>
               </div>

@@ -252,7 +252,8 @@
     "youWin": "승리!",
     "youLose": "패배!",
     "spectating": "관전 중",
-    "reconnecting": "재연결 중..."
+    "reconnecting": "재연결 중...",
+    "loginRequired": "멀티플레이어 기능을 사용하려면 로그인하세요"
   },
   "achievements": {
     "firstGame": "첫 게임",

@@ -389,7 +389,8 @@
     "youWin": "Vous avez gagné !",
     "youLose": "Vous avez perdu !",
     "spectating": "Spectateur",
-    "reconnecting": "Reconnexion..."
+    "reconnecting": "Reconnexion...",
+    "loginRequired": "Veuillez vous connecter pour utiliser les fonctionnalités multijoueur"
   },
   "achievements": {
     "firstGame": "Premier jeu",
