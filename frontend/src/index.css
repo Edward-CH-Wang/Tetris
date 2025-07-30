@@ -82,27 +82,27 @@ body {
 }
 
 /* 遊戲板格子樣式 */
-.tetris-cell {
+.blockfall-cell {
   @apply border border-gray-700 transition-all duration-150;
   aspect-ratio: 1;
 }
 
-.tetris-cell.filled {
+.blockfall-cell.filled {
   @apply border-gray-500 shadow-inner;
 }
 
-.tetris-cell.ghost {
+.blockfall-cell.ghost {
   @apply border-gray-600 bg-gray-800 bg-opacity-30;
 }
 
 /* 方塊顏色 */
-.tetris-I { @apply bg-cyan-500 border-cyan-400; }
-.tetris-O { @apply bg-yellow-500 border-yellow-400; }
-.tetris-T { @apply bg-purple-500 border-purple-400; }
-.tetris-S { @apply bg-green-500 border-green-400; }
-.tetris-Z { @apply bg-red-500 border-red-400; }
-.tetris-J { @apply bg-blue-500 border-blue-400; }
-.tetris-L { @apply bg-orange-500 border-orange-400; }
+.blockfall-I { @apply bg-cyan-500 border-cyan-400; }
+.blockfall-O { @apply bg-yellow-500 border-yellow-400; }
+.blockfall-T { @apply bg-purple-500 border-purple-400; }
+.blockfall-S { @apply bg-green-500 border-green-400; }
+.blockfall-Z { @apply bg-red-500 border-red-400; }
+.blockfall-J { @apply bg-blue-500 border-blue-400; }
+.blockfall-L { @apply bg-orange-500 border-orange-400; }
 
 /* 動畫效果 */
 @keyframes slideInUp {

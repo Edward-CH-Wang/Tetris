@@ -2,6 +2,7 @@ import React, { useEffect, useCallback, useRef } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { useMultiplayerStore } from '../store/multiplayerStore';
 import { cn } from '../lib/utils';
+import { useTranslation } from 'react-i18next';
 
 interface GameBoardProps {
   isMultiplayer?: boolean;
@@ -14,6 +15,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
   isOpponent = false,
   className 
 }) => {
+  const { t } = useTranslation();
   const gameRef = useRef<HTMLDivElement>(null);
   const {
     board,
@@ -159,8 +161,8 @@ const GameBoard: React.FC<GameBoardProps> = ({
       return (
         <div className="absolute inset-0 bg-black/70 flex items-center justify-center z-10">
           <div className="text-center text-white">
-            <h3 className="text-2xl font-bold mb-2">遊戲暫停</h3>
-            <p className="text-sm opacity-80">按 ESC 或 P 繼續遊戲</p>
+            <h3 className="text-2xl font-bold mb-2">{t('game.paused')}</h3>
+            <p className="text-sm opacity-80">{t('game.pauseInstructions')}</p>
           </div>
         </div>
       );
@@ -170,8 +172,8 @@ const GameBoard: React.FC<GameBoardProps> = ({
       return (
         <div className="absolute inset-0 bg-red-900/70 flex items-center justify-center z-10">
           <div className="text-center text-white">
-            <h3 className="text-2xl font-bold mb-2">遊戲結束</h3>
-            <p className="text-sm opacity-80">點擊重新開始</p>
+            <h3 className="text-2xl font-bold mb-2">{t('game.gameOver')}</h3>
+            <p className="text-sm opacity-80">{t('game.clickToRestart')}</p>
           </div>
         </div>
       );
@@ -185,7 +187,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
       {/* 遊戲標題 */}
       {isOpponent && (
         <div className="text-center mb-2">
-          <h4 className="text-lg font-semibold text-gray-300">對手</h4>
+          <h4 className="text-lg font-semibold text-gray-300">{t('game.opponent')}</h4>
         </div>
       )}
       
@@ -213,12 +215,12 @@ const GameBoard: React.FC<GameBoardProps> = ({
       {!isOpponent && (
         <div className="mt-4 text-xs text-gray-400 space-y-1">
           <div className="grid grid-cols-2 gap-2">
-            <div>← → 移動</div>
-            <div>↑ 旋轉</div>
-            <div>↓ 軟降</div>
-            <div>Enter 硬降</div>
-            <div>ESC 暫停</div>
-            <div>空白鍵 旋轉</div>
+            <div>← → {t('game.move')}</div>
+            <div>↑ {t('game.rotate')}</div>
+            <div>↓ {t('game.softDrop')}</div>
+            <div>Enter {t('game.hardDrop')}</div>
+            <div>ESC {t('game.pause')}</div>
+            <div>{t('game.spaceToRotate')}</div>
           </div>
         </div>
       )}

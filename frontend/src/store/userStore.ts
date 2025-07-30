@@ -444,15 +444,15 @@ export const useUserStore = create<UserState>()(persist(
         });
         
         // 設置登出標記，防止persist恢復狀態（雙重保險）
-         localStorage.setItem('tetris-logout-flag', 'true');
-         sessionStorage.setItem('tetris-logout-flag', 'true');
+         localStorage.setItem('blockfall-logout-flag', 'true');
+    sessionStorage.setItem('blockfall-logout-flag', 'true');
         
         // 清除持久化存儲
-        localStorage.removeItem('tetris-user-store');
+        localStorage.removeItem('blockfall-user-store');
         
         // 強制清除所有相關的localStorage項目
         Object.keys(localStorage).forEach(key => {
-          if (key.includes('tetris') || key.includes('user')) {
+          if (key.includes('blockfall') || key.includes('user')) {
             localStorage.removeItem(key);
           }
         });
@@ -461,7 +461,7 @@ export const useUserStore = create<UserState>()(persist(
         try {
           // 清除sessionStorage
           Object.keys(sessionStorage).forEach(key => {
-            if (key.includes('tetris') || key.includes('user')) {
+            if (key.includes('blockfall') || key.includes('user')) {
               sessionStorage.removeItem(key);
             }
           });
@@ -470,7 +470,7 @@ export const useUserStore = create<UserState>()(persist(
           if (typeof window !== 'undefined' && window.caches) {
             window.caches.keys().then(names => {
               names.forEach(name => {
-                if (name.includes('tetris') || name.includes('user')) {
+                if (name.includes('blockfall') || name.includes('user')) {
                   window.caches.delete(name);
                 }
               });
@@ -929,7 +929,7 @@ export const useUserStore = create<UserState>()(persist(
         });
         
         // 清除本地存儲
-        localStorage.removeItem('tetris-user-store');
+        localStorage.removeItem('blockfall-user-store');
         
       } catch (error: any) {
         set({ 
@@ -1315,7 +1315,7 @@ export const useUserStore = create<UserState>()(persist(
     }
   }),
   {
-    name: 'tetris-user-store',
+    name: 'blockfall-user-store',
     partialize: (state) => ({
       currentUser: state.currentUser,
       isAuthenticated: state.isAuthenticated,
@@ -1331,8 +1331,8 @@ export const useUserStore = create<UserState>()(persist(
       console.log('🔄 [DEBUG] onRehydrateStorage 開始執行...');
       
       // 檢查是否有登出標記
-      const logoutFlag = localStorage.getItem('tetris-logout-flag');
-      const sessionLogoutFlag = sessionStorage.getItem('tetris-logout-flag');
+      const logoutFlag = localStorage.getItem('blockfall-logout-flag');
+    const sessionLogoutFlag = sessionStorage.getItem('blockfall-logout-flag');
       
       console.log('🔍 [DEBUG] 檢查登出標記:', {
         logoutFlag,
@@ -1343,8 +1343,8 @@ export const useUserStore = create<UserState>()(persist(
         console.log('🚪 [DEBUG] 發現登出標記，準備重置狀態...');
         
         // 清除登出標記
-        localStorage.removeItem('tetris-logout-flag');
-        sessionStorage.removeItem('tetris-logout-flag');
+        localStorage.removeItem('blockfall-logout-flag');
+        sessionStorage.removeItem('blockfall-logout-flag');
         
         console.log('🧹 [DEBUG] 登出標記已清除');
         

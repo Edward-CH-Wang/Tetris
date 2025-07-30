@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUserStore } from '../store/userStore';
+import { useTranslation } from 'react-i18next';
 import { 
   ArrowLeft, 
   Home, 
@@ -109,6 +110,7 @@ const defaultSettings: GameSettings = {
 
 const Settings: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'profile' | 'game' | 'audio' | 'controls' | 'visual' | 'notifications' | 'privacy' | 'cloud'>('profile');
   const [settings, setSettings] = useState<GameSettings>(defaultSettings);
   const [isEditing, setIsEditing] = useState(false);
@@ -149,7 +151,7 @@ const Settings: React.FC = () => {
     });
     
     // 從 localStorage 載入設定
-    const savedSettings = localStorage.getItem('tetris-settings');
+    const savedSettings = localStorage.getItem('blockfall-settings');
     if (savedSettings) {
       try {
         setSettings({ ...defaultSettings, ...JSON.parse(savedSettings) });
@@ -169,7 +171,7 @@ const Settings: React.FC = () => {
 
   const handleGoBack = () => {
     if (hasChanges) {
-      if (confirm('您有未保存的更改，確定要離開嗎？')) {
+      if (confirm(t('settings.unsavedChanges'))) {
         navigate(-1);
       }
     } else {
@@ -179,7 +181,7 @@ const Settings: React.FC = () => {
 
   const handleGoHome = () => {
     if (hasChanges) {
-      if (confirm('您有未保存的更改，確定要離開嗎？')) {
+      if (confirm(t('settings.unsavedChanges'))) {
         navigate('/');
       }
     } else {
@@ -210,7 +212,7 @@ const Settings: React.FC = () => {
 
   const handleSaveSettings = () => {
     try {
-      localStorage.setItem('tetris-settings', JSON.stringify(settings));
+      localStorage.setItem('blockfall-settings', JSON.stringify(settings));
       setHasChanges(false);
       toast.success('設定已保存');
     } catch (err) {
@@ -400,7 +402,7 @@ const Settings: React.FC = () => {
               className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
-              返回
+              {t('common.back')}
             </button>
             
             <button
@@ -408,7 +410,7 @@ const Settings: React.FC = () => {
               className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
             >
               <Home className="w-4 h-4" />
-              首頁
+              {t('common.home')}
             </button>
           </div>
           
@@ -416,7 +418,7 @@ const Settings: React.FC = () => {
             <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-600 rounded-lg flex items-center justify-center">
               <SettingsIcon className="w-4 h-4 text-white" />
             </div>
-            <h1 className="text-xl font-bold text-white">設定</h1>
+            <h1 className="text-xl font-bold text-white">{t('settings.title')}</h1>
           </div>
           
           {/* 保存和重置按鈕 */}
@@ -428,14 +430,14 @@ const Settings: React.FC = () => {
                   className="flex items-center gap-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
                 >
                   <RotateCcw className="w-4 h-4" />
-                  重置
+                  {t('common.reset')}
                 </button>
                 <button
                   onClick={handleSaveSettings}
                   className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
                 >
                   <Save className="w-4 h-4" />
-                  保存
+                  {t('common.save')}
                 </button>
               </>
             )}
@@ -448,14 +450,14 @@ const Settings: React.FC = () => {
             <div className="lg:col-span-1">
               <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-4 border border-gray-700 sticky top-6">
                 <div className="space-y-2">
-                  {renderTabButton('profile', <User className="w-4 h-4" />, '個人資料')}
-                  {renderTabButton('game', <Gamepad2 className="w-4 h-4" />, '遊戲設定')}
-                  {renderTabButton('audio', <Volume2 className="w-4 h-4" />, '音效設定')}
-                  {renderTabButton('controls', <Gamepad2 className="w-4 h-4" />, '控制設定')}
-                  {renderTabButton('visual', <Palette className="w-4 h-4" />, '視覺設定')}
-                  {renderTabButton('notifications', <Bell className="w-4 h-4" />, '通知設定')}
-                  {renderTabButton('privacy', <Shield className="w-4 h-4" />, '隱私設定')}
-                  {renderTabButton('cloud', <Cloud className="w-4 h-4" />, '雲端同步')}
+                  {renderTabButton('profile', <User className="w-4 h-4" />, t('settings.tabs.profile'))}
+                  {renderTabButton('game', <Gamepad2 className="w-4 h-4" />, t('settings.tabs.game'))}
+                  {renderTabButton('audio', <Volume2 className="w-4 h-4" />, t('settings.tabs.audio'))}
+                  {renderTabButton('controls', <Gamepad2 className="w-4 h-4" />, t('settings.tabs.controls'))}
+                  {renderTabButton('visual', <Palette className="w-4 h-4" />, t('settings.tabs.visual'))}
+                  {renderTabButton('notifications', <Bell className="w-4 h-4" />, t('settings.tabs.notifications'))}
+                  {renderTabButton('privacy', <Shield className="w-4 h-4" />, t('settings.tabs.privacy'))}
+                  {renderTabButton('cloud', <Cloud className="w-4 h-4" />, t('settings.tabs.cloudSync'))}
                 </div>
                 
                 <div className="mt-6 pt-6 border-t border-gray-700">
@@ -464,7 +466,7 @@ const Settings: React.FC = () => {
                     className="w-full flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
                   >
                     <LogOut className="w-4 h-4" />
-                    登出
+                    {t('settings.logout')}
                   </button>
                 </div>
               </div>
@@ -477,18 +479,18 @@ const Settings: React.FC = () => {
                 {activeTab === 'profile' && (
                   <div className="space-y-6">
                     <div className="flex items-center justify-between">
-                      <h2 className="text-2xl font-bold text-white">個人資料</h2>
+                      <h2 className="text-2xl font-bold text-white">{t('settings.tabs.profile')}</h2>
                       <button
                         onClick={() => setIsEditing(!isEditing)}
                         className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
                       >
-                        {isEditing ? '取消編輯' : '編輯資料'}
+                        {isEditing ? t('common.cancel') : t('settings.profile.editProfile')}
                       </button>
                     </div>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">姓名</label>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">{t('settings.profile.name')}</label>
                         <input
                           type="text"
                           value={profileData.name}
@@ -499,7 +501,7 @@ const Settings: React.FC = () => {
                       </div>
                       
                       <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">電子郵件</label>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">{t('settings.profile.email')}</label>
                         <input
                           type="email"
                           value={profileData.email}
@@ -513,17 +515,17 @@ const Settings: React.FC = () => {
                     {isEditing && (
                       <>
                         <div className="border-t border-gray-700 pt-6">
-                          <h3 className="text-lg font-semibold text-white mb-4">更改密碼</h3>
+                          <h3 className="text-lg font-semibold text-white mb-4">{t('settings.changePassword')}</h3>
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
-                              <label className="block text-sm font-medium text-gray-300 mb-2">當前密碼</label>
+                              <label className="block text-sm font-medium text-gray-300 mb-2">{t('settings.currentPassword')}</label>
                               <div className="relative">
                                 <input
                                   type={showPassword ? 'text' : 'password'}
                                   value={profileData.currentPassword}
                                   onChange={(e) => handleProfileChange('currentPassword', e.target.value)}
                                   className="w-full bg-gray-700 text-white px-4 py-2 pr-10 rounded-lg border border-gray-600 focus:border-blue-500 focus:outline-none"
-                                  placeholder="輸入當前密碼"
+                                  placeholder={t('settings.enterCurrentPassword')}
                                 />
                                 <button
                                   type="button"
@@ -536,25 +538,25 @@ const Settings: React.FC = () => {
                             </div>
                             
                             <div>
-                              <label className="block text-sm font-medium text-gray-300 mb-2">新密碼</label>
+                              <label className="block text-sm font-medium text-gray-300 mb-2">{t('settings.newPassword')}</label>
                               <input
                                 type={showPassword ? 'text' : 'password'}
                                 value={profileData.newPassword}
                                 onChange={(e) => handleProfileChange('newPassword', e.target.value)}
                                 className="w-full bg-gray-700 text-white px-4 py-2 rounded-lg border border-gray-600 focus:border-blue-500 focus:outline-none"
-                                placeholder="輸入新密碼"
+                                placeholder={t('settings.enterNewPassword')}
                                 minLength={6}
                               />
                             </div>
                             
                             <div>
-                              <label className="block text-sm font-medium text-gray-300 mb-2">確認新密碼</label>
+                              <label className="block text-sm font-medium text-gray-300 mb-2">{t('settings.confirmNewPassword')}</label>
                               <input
                                 type={showPassword ? 'text' : 'password'}
                                 value={profileData.confirmPassword}
                                 onChange={(e) => handleProfileChange('confirmPassword', e.target.value)}
                                 className="w-full bg-gray-700 text-white px-4 py-2 rounded-lg border border-gray-600 focus:border-blue-500 focus:outline-none"
-                                placeholder="再次輸入新密碼"
+                                placeholder={t('settings.enterNewPasswordAgain')}
                               />
                             </div>
                           </div>
@@ -565,7 +567,7 @@ const Settings: React.FC = () => {
                             onClick={handleUpdateProfile}
                             className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
                           >
-                            保存更改
+                            {t('settings.saveChanges')}
                           </button>
                           
                           <button
@@ -573,7 +575,7 @@ const Settings: React.FC = () => {
                             className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors flex items-center gap-2"
                           >
                             <Trash2 className="w-4 h-4" />
-                            刪除帳號
+                            {t('settings.deleteAccount')}
                           </button>
                         </div>
                       </>
@@ -584,43 +586,43 @@ const Settings: React.FC = () => {
                 {/* 遊戲設定 */}
                 {activeTab === 'game' && (
                   <div className="space-y-6">
-                    <h2 className="text-2xl font-bold text-white">遊戲設定</h2>
+                    <h2 className="text-2xl font-bold text-white">{t('settings.tabs.game')}</h2>
                     
                     <div className="space-y-4">
                       {renderToggle(
-                        '幽靈方塊',
-                        '顯示方塊落下位置的預覽',
+                        t('settings.game.ghostPiece'),
+                        t('settings.game.ghostPieceDesc'),
                         settings.ghostPiece,
                         (value) => handleSettingChange('ghostPiece', value)
                       )}
                       
                       {renderToggle(
-                        '網格線',
-                        '在遊戲板上顯示網格線',
+                        t('settings.game.gridLines'),
+                        t('settings.game.gridLinesDesc'),
                         settings.gridLines,
                         (value) => handleSettingChange('gridLines', value)
                       )}
                       
                       {renderToggle(
-                        '自動重複',
-                        '長按方向鍵時自動重複移動',
+                        t('settings.game.autoRepeat'),
+                        t('settings.game.autoRepeatDesc'),
                         settings.autoRepeat,
                         (value) => handleSettingChange('autoRepeat', value)
                       )}
                       
                       {renderSelect(
-                        '預覽方塊數量',
+                        t('settings.game.nextPieceCount'),
                         settings.nextPieceCount.toString(),
                         [
-                          { value: '1', label: '1 個' },
-                          { value: '3', label: '3 個' },
-                          { value: '5', label: '5 個' }
+                          { value: '1', label: t('settings.game.pieces1') },
+                          { value: '3', label: t('settings.game.pieces3') },
+                          { value: '5', label: t('settings.game.pieces5') }
                         ],
                         (value) => handleSettingChange('nextPieceCount', parseInt(value))
                       )}
                       
                       {renderSlider(
-                        '下降速度',
+                        t('settings.game.dropSpeed'),
                         settings.dropSpeed * 100,
                         (value) => handleSettingChange('dropSpeed', value / 100),
                         50,
@@ -633,12 +635,12 @@ const Settings: React.FC = () => {
                 {/* 音效設定 */}
                 {activeTab === 'audio' && (
                   <div className="space-y-6">
-                    <h2 className="text-2xl font-bold text-white">音效設定</h2>
+                    <h2 className="text-2xl font-bold text-white">{t('settings.tabs.audio')}</h2>
                     
                     <div className="space-y-4">
                       {renderToggle(
-                        '音效',
-                        '啟用遊戲音效',
+                        t('settings.audio.soundEffects'),
+                        t('settings.audio.soundEffectsDesc'),
                         settings.soundEnabled,
                         (value) => handleSettingChange('soundEnabled', value)
                       )}
@@ -646,7 +648,7 @@ const Settings: React.FC = () => {
                       {settings.soundEnabled && (
                         <div className="ml-6">
                           {renderSlider(
-                            '音效音量',
+                            t('settings.audio.soundVolume'),
                             settings.soundVolume,
                             (value) => handleSettingChange('soundVolume', value)
                           )}
@@ -654,8 +656,8 @@ const Settings: React.FC = () => {
                       )}
                       
                       {renderToggle(
-                        '背景音樂',
-                        '啟用背景音樂',
+                        t('settings.audio.backgroundMusic'),
+                        t('settings.audio.backgroundMusicDesc'),
                         settings.musicEnabled,
                         (value) => handleSettingChange('musicEnabled', value)
                       )}
@@ -663,7 +665,7 @@ const Settings: React.FC = () => {
                       {settings.musicEnabled && (
                         <div className="ml-6">
                           {renderSlider(
-                            '音樂音量',
+                            t('settings.audio.musicVolume'),
                             settings.musicVolume,
                             (value) => handleSettingChange('musicVolume', value)
                           )}
@@ -676,20 +678,20 @@ const Settings: React.FC = () => {
                 {/* 控制設定 */}
                 {activeTab === 'controls' && (
                   <div className="space-y-6">
-                    <h2 className="text-2xl font-bold text-white">控制設定</h2>
+                    <h2 className="text-2xl font-bold text-white">{t('settings.tabs.controls')}</h2>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {Object.entries(settings.keyBindings).map(([action, key]) => (
                         <div key={action} className="flex items-center justify-between p-3 bg-gray-700 rounded-lg">
                           <span className="text-white capitalize">
                             {{
-                              moveLeft: '向左移動',
-                              moveRight: '向右移動',
-                              moveDown: '向下移動',
-                              rotate: '旋轉',
-                              hardDrop: '硬降',
-                              hold: '保留',
-                              pause: '暫停'
+                              moveLeft: t('settings.controls.moveLeft'),
+                              moveRight: t('settings.controls.moveRight'),
+                              moveDown: t('settings.controls.moveDown'),
+                              rotate: t('settings.controls.rotate'),
+                              hardDrop: t('settings.controls.hardDrop'),
+                              hold: t('settings.controls.hold'),
+                              pause: t('settings.controls.pause')
                             }[action]}
                           </span>
                           <div className="px-3 py-1 bg-gray-600 rounded text-white text-sm">
@@ -700,7 +702,7 @@ const Settings: React.FC = () => {
                     </div>
                     
                     <p className="text-sm text-gray-400">
-                      點擊按鍵來重新設定控制鍵位
+                      {t('settings.controls.clickToRebind')}
                     </p>
                   </div>
                 )}
@@ -708,37 +710,37 @@ const Settings: React.FC = () => {
                 {/* 視覺設定 */}
                 {activeTab === 'visual' && (
                   <div className="space-y-6">
-                    <h2 className="text-2xl font-bold text-white">視覺設定</h2>
+                    <h2 className="text-2xl font-bold text-white">{t('settings.tabs.visual')}</h2>
                     
                     <div className="space-y-4">
                       {renderSelect(
-                        '主題',
+                        t('settings.visual.theme'),
                         settings.theme,
                         [
-                          { value: 'dark', label: '深色主題' },
-                          { value: 'light', label: '淺色主題' },
-                          { value: 'auto', label: '跟隨系統' }
+                          { value: 'dark', label: t('settings.visual.darkTheme') },
+                          { value: 'light', label: t('settings.visual.lightTheme') },
+                          { value: 'auto', label: t('settings.visual.systemTheme') }
                         ],
                         (value) => handleSettingChange('theme', value)
                       )}
                       
                       {renderToggle(
-                        '動畫效果',
-                        '啟用界面動畫效果',
+                        t('settings.visual.animations'),
+                        t('settings.visual.animationsDesc'),
                         settings.animations,
                         (value) => handleSettingChange('animations', value)
                       )}
                       
                       {renderToggle(
-                        '粒子效果',
-                        '啟用消除行時的粒子效果',
+                        t('settings.visual.particles'),
+                        t('settings.visual.particlesDesc'),
                         settings.particleEffects,
                         (value) => handleSettingChange('particleEffects', value)
                       )}
                       
                       {renderToggle(
-                        '背景效果',
-                        '啟用動態背景效果',
+                        t('settings.visual.backgroundEffects'),
+                        t('settings.visual.backgroundEffectsDesc'),
                         settings.backgroundEffects,
                         (value) => handleSettingChange('backgroundEffects', value)
                       )}
@@ -749,26 +751,26 @@ const Settings: React.FC = () => {
                 {/* 通知設定 */}
                 {activeTab === 'notifications' && (
                   <div className="space-y-6">
-                    <h2 className="text-2xl font-bold text-white">通知設定</h2>
+                    <h2 className="text-2xl font-bold text-white">{t('settings.tabs.notifications')}</h2>
                     
                     <div className="space-y-4">
                       {renderToggle(
-                        '遊戲通知',
-                        '接收遊戲相關通知',
+                        t('settings.notifications.gameNotifications'),
+                        t('settings.notifications.gameNotificationsDesc'),
                         settings.gameNotifications,
                         (value) => handleSettingChange('gameNotifications', value)
                       )}
                       
                       {renderToggle(
-                        '好友通知',
-                        '接收好友活動通知',
+                        t('settings.notifications.friendNotifications'),
+                        t('settings.notifications.friendNotificationsDesc'),
                         settings.friendNotifications,
                         (value) => handleSettingChange('friendNotifications', value)
                       )}
                       
                       {renderToggle(
-                        '成就通知',
-                        '接收成就解鎖通知',
+                        t('settings.notifications.achievementNotifications'),
+                        t('settings.notifications.achievementNotificationsDesc'),
                         settings.achievementNotifications,
                         (value) => handleSettingChange('achievementNotifications', value)
                       )}
@@ -779,30 +781,30 @@ const Settings: React.FC = () => {
                 {/* 隱私設定 */}
                 {activeTab === 'privacy' && (
                   <div className="space-y-6">
-                    <h2 className="text-2xl font-bold text-white">隱私設定</h2>
+                    <h2 className="text-2xl font-bold text-white">{t('settings.tabs.privacy')}</h2>
                     
                     <div className="space-y-4">
                       {renderSelect(
-                        '個人資料可見性',
+                        t('settings.privacy.profileVisibility'),
                         settings.profileVisibility,
                         [
-                          { value: 'public', label: '公開' },
-                          { value: 'friends', label: '僅好友' },
-                          { value: 'private', label: '私人' }
+                          { value: 'public', label: t('settings.privacy.public') },
+                          { value: 'friends', label: t('settings.privacy.friendsOnly') },
+                          { value: 'private', label: t('settings.privacy.private') }
                         ],
                         (value) => handleSettingChange('profileVisibility', value)
                       )}
                       
                       {renderToggle(
-                        '顯示在線狀態',
-                        '讓其他玩家看到您的在線狀態',
+                        t('settings.privacy.showOnlineStatus'),
+                        t('settings.privacy.showOnlineStatusDesc'),
                         settings.showOnlineStatus,
                         (value) => handleSettingChange('showOnlineStatus', value)
                       )}
                       
                       {renderToggle(
-                        '允許好友請求',
-                        '允許其他玩家向您發送好友請求',
+                        t('settings.privacy.allowFriendRequests'),
+                        t('settings.privacy.allowFriendRequestsDesc'),
                         settings.allowFriendRequests,
                         (value) => handleSettingChange('allowFriendRequests', value)
                       )}
@@ -814,14 +816,14 @@ const Settings: React.FC = () => {
                 {activeTab === 'cloud' && (
                   <div className="space-y-6">
                     <div className="flex items-center justify-between">
-                      <h2 className="text-2xl font-bold text-white">雲端同步</h2>
+                      <h2 className="text-2xl font-bold text-white">{t('settings.tabs.cloudSync')}</h2>
                       <CloudSyncStatus />
                     </div>
                     
                     <div className="space-y-4">
                       {renderToggle(
-                        '啟用雲端同步',
-                        '將您的設定和遊戲進度同步到雲端',
+                        t('settings.cloudSync.enableSync'),
+                        t('settings.cloudSync.enableSyncDesc'),
                         settings.cloudSyncEnabled,
                         (value) => handleSettingChange('cloudSyncEnabled', value)
                       )}
@@ -829,15 +831,15 @@ const Settings: React.FC = () => {
                       {settings.cloudSyncEnabled && (
                         <div className="ml-6 space-y-4">
                           {renderToggle(
-                            '自動同步設定',
-                            '自動將遊戲設定同步到雲端',
+                            t('settings.cloudSync.autoSyncSettings'),
+                            t('settings.cloudSync.autoSyncSettingsDesc'),
                             settings.autoSyncSettings,
                             (value) => handleSettingChange('autoSyncSettings', value)
                           )}
                           
                           {renderToggle(
-                            '同步遊戲進度',
-                            '將遊戲進度和成就同步到雲端',
+                            t('settings.cloudSync.syncProgress'),
+                            t('settings.cloudSync.syncProgressDesc'),
                             settings.syncGameProgress,
                             (value) => handleSettingChange('syncGameProgress', value)
                           )}
@@ -846,7 +848,7 @@ const Settings: React.FC = () => {
                     </div>
                     
                     <div className="bg-gray-700/50 rounded-lg p-4">
-                      <h3 className="text-lg font-semibold text-white mb-2">Firebase 配置狀態</h3>
+                      <h3 className="text-lg font-semibold text-white mb-2">{t('settings.cloudSync.firebaseStatus')}</h3>
                       {(() => {
                         const apiKey = import.meta.env.VITE_FIREBASE_API_KEY;
                         const isUsingExampleConfig = !apiKey || 
@@ -858,18 +860,18 @@ const Settings: React.FC = () => {
                             <div className="bg-orange-900/30 border border-orange-500/30 rounded-lg p-4 mb-4">
                               <div className="flex items-center mb-2">
                                 <Shield className="w-5 h-5 text-orange-400 mr-2" />
-                                <span className="text-orange-400 font-medium">配置需要設置</span>
+                                <span className="text-orange-400 font-medium">{t('settings.cloudSync.configNeeded')}</span>
                               </div>
                               <p className="text-sm text-orange-200 mb-3">
-                                目前使用的是示例 Firebase 配置，雲端同步功能無法正常工作。
+                                {t('settings.cloudSync.configNeededDesc')}
                               </p>
                               <div className="text-xs text-orange-300">
-                                <p className="mb-2">請按照以下步驟設置：</p>
+                                <p className="mb-2">{t('settings.cloudSync.setupSteps')}：</p>
                                 <ol className="list-decimal list-inside space-y-1 ml-2">
-                                  <li>前往 Firebase Console 創建項目</li>
-                                  <li>啟用 Authentication 和 Firestore Database</li>
-                                  <li>更新 .env 文件中的配置值</li>
-                                  <li>重新啟動開發服務器</li>
+                                  <li>{t('settings.cloudSync.step1')}</li>
+                                  <li>{t('settings.cloudSync.step2')}</li>
+                                  <li>{t('settings.cloudSync.step3')}</li>
+                                  <li>{t('settings.cloudSync.step4')}</li>
                                 </ol>
                               </div>
                               <a
@@ -879,7 +881,7 @@ const Settings: React.FC = () => {
                                 className="inline-flex items-center mt-3 text-sm text-orange-300 hover:text-orange-200 underline"
                               >
                                 <Globe className="w-4 h-4 mr-1" />
-                                前往 Firebase Console
+                                {t('settings.cloudSync.goToFirebase')}
                               </a>
                             </div>
                           );
@@ -888,10 +890,10 @@ const Settings: React.FC = () => {
                             <div className="bg-green-900/30 border border-green-500/30 rounded-lg p-4 mb-4">
                               <div className="flex items-center mb-2">
                                 <Cloud className="w-5 h-5 text-green-400 mr-2" />
-                                <span className="text-green-400 font-medium">Firebase 配置正常</span>
+                                <span className="text-green-400 font-medium">{t('settings.cloudSync.configOk')}</span>
                               </div>
                               <p className="text-sm text-green-200">
-                                Firebase 配置已正確設置，雲端同步功能可正常使用。
+                                {t('settings.cloudSync.configOkDesc')}
                               </p>
                             </div>
                           );
@@ -900,10 +902,10 @@ const Settings: React.FC = () => {
                       
                       <div className="flex gap-3">
                         <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
-                          立即同步
+                          {t('settings.cloudSync.syncNow')}
                         </button>
                         <button className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors">
-                          重置雲端數據
+                          {t('settings.cloudSync.resetCloudData')}
                         </button>
                       </div>
                     </div>

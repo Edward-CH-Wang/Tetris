@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useGameStore } from '../store/gameStore';
 import { useUserStore } from '../store/userStore';
 import GameBoard from '../components/GameBoard';
@@ -9,6 +10,7 @@ import { toast } from 'sonner';
 
 const SinglePlayer: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { 
     gameStatus, 
     score, 
@@ -45,14 +47,14 @@ const SinglePlayer: React.FC = () => {
       });
       
       // 顯示遊戲結束通知
-      toast.success(`遊戲結束！最終分數：${score.toLocaleString()}`, {
-        description: `等級：${level}，消除行數：${lines}`
+      toast.success(t('game.gameOver', { score: score.toLocaleString() }), {
+        description: t('game.finalStats', { level, lines })
       });
       
       // 如果是訪客，提示登入以保存記錄
       if (currentUser.isGuest) {
         setTimeout(() => {
-          toast.info('登入Google帳號以保存您的遊戲記錄！');
+          toast.info(t('game.loginToSave'));
         }, 2000);
       }
     }
@@ -83,7 +85,7 @@ const SinglePlayer: React.FC = () => {
               className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
-              返回
+              {t('common.back')}
             </button>
             
             <button
@@ -91,7 +93,7 @@ const SinglePlayer: React.FC = () => {
               className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
             >
               <Home className="w-4 h-4" />
-              首頁
+              {t('common.home')}
             </button>
           </div>
           
@@ -99,7 +101,7 @@ const SinglePlayer: React.FC = () => {
             <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
               <div className="text-white font-bold text-sm">T</div>
             </div>
-            <h1 className="text-xl font-bold text-white">單人遊戲</h1>
+            <h1 className="text-xl font-bold text-white">{t('game.singlePlayer')}</h1>
           </div>
           
           {/* 用戶信息 */}
@@ -118,7 +120,7 @@ const SinglePlayer: React.FC = () => {
               )}
               <span className="text-white text-sm">{currentUser.name}</span>
               {currentUser.isGuest && (
-                <span className="text-xs bg-yellow-600 text-white px-2 py-1 rounded-full">訪客</span>
+                <span className="text-xs bg-yellow-600 text-white px-2 py-1 rounded-full">{t('auth.guest')}</span>
               )}
             </div>
           )}
@@ -146,77 +148,72 @@ const SinglePlayer: React.FC = () => {
               <div className="space-y-6">
                 {/* 遊戲說明 */}
                 <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-4 border border-gray-700">
-                  <h3 className="text-lg font-semibold text-white mb-3">遊戲說明</h3>
+                  <h3 className="text-lg font-semibold text-white mb-3">{t('game.controls')}</h3>
                   <div className="space-y-2 text-sm text-gray-300">
                     <div className="flex justify-between">
-                      <span>移動：</span>
+                      <span>{t('game.move')}:</span>
                       <span>← →</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>旋轉：</span>
-                      <span>↑ 或 空白鍵</span>
+                      <span>{t('game.rotate')}:</span>
+                      <span>↑ {t('game.or')} {t('game.space')}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>軟降：</span>
+                      <span>{t('game.softDrop')}:</span>
                       <span>↓</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>硬降：</span>
+                      <span>{t('game.hardDrop')}:</span>
                       <span>Enter</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>暫停：</span>
-                      <span>ESC 或 P</span>
+                      <span>{t('game.pause')}:</span>
+                      <span>ESC {t('game.or')} P</span>
                     </div>
                   </div>
                 </div>
                 
                 {/* 計分規則 */}
                 <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-4 border border-gray-700">
-                  <h3 className="text-lg font-semibold text-white mb-3">計分規則</h3>
+                  <h3 className="text-lg font-semibold text-white mb-3">{t('game.scoringRules')}</h3>
                   <div className="space-y-2 text-sm text-gray-300">
                     <div className="flex justify-between">
-                      <span>單行：</span>
-                      <span>40 × 等級</span>
+                      <span>{t('game.singleLine')}:</span>
+                      <span>40 × {t('game.level')}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>雙行：</span>
-                      <span>100 × 等級</span>
+                      <span>{t('game.doubleLine')}:</span>
+                      <span>100 × {t('game.level')}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>三行：</span>
-                      <span>300 × 等級</span>
+                      <span>{t('game.tripleLine')}:</span>
+                      <span>300 × {t('game.level')}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>四行：</span>
-                      <span>1200 × 等級</span>
+                      <span>{t('game.tetris')}:</span>
+                      <span>1200 × {t('game.level')}</span>
                     </div>
                   </div>
                   <div className="mt-3 pt-3 border-t border-gray-600">
                     <p className="text-xs text-gray-400">
-                      每消除10行提升一個等級，遊戲速度會加快
+                      {t('game.levelUpInfo')}
                     </p>
                   </div>
                 </div>
                 
                 {/* 遊戲狀態 */}
                 <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-4 border border-gray-700">
-                  <h3 className="text-lg font-semibold text-white mb-3">遊戲狀態</h3>
+                  <h3 className="text-lg font-semibold text-white mb-3">{t('game.gameStatus')}</h3>
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-gray-300">狀態：</span>
+                      <span className="text-gray-300">{t('game.statusLabel')}:</span>
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                         gameStatus === 'playing' ? 'bg-green-600 text-green-100' :
                         gameStatus === 'paused' ? 'bg-yellow-600 text-yellow-100' :
                         gameStatus === 'gameOver' ? 'bg-red-600 text-red-100' :
                         'bg-gray-600 text-gray-100'
                       }`}>
-                        {{
-                          idle: '待機',
-                          playing: '遊戲中',
-                          paused: '暫停',
-                          gameOver: '結束'
-                        }[gameStatus]}
+                        {t(`game.status.${gameStatus}`)}
                       </span>
                     </div>
                     
@@ -229,7 +226,7 @@ const SinglePlayer: React.FC = () => {
                           />
                         </div>
                         <p className="text-xs text-gray-400 mt-1">
-                          距離下一等級：{10 - (lines % 10)} 行
+                          {t('game.nextLevelProgress', { lines: 10 - (lines % 10) })}
                         </p>
                       </div>
                     )}

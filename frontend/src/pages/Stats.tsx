@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useUserStore } from '../store/userStore';
 import { 
   ArrowLeft, 
@@ -36,6 +37,7 @@ import { cn } from '../lib/utils';
 import CloudSyncStatus from '../components/CloudSyncStatus';
 
 const Stats: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'overview' | 'achievements' | 'history'>('overview');
   
@@ -95,8 +97,8 @@ const Stats: React.FC = () => {
     const multiplayerGames = gameRecords.filter(r => r.gameType === 'multiplayer').length;
     
     return [
-      { name: '單人模式', value: singlePlayerGames, color: '#3B82F6' },
-      { name: '多人對戰', value: multiplayerGames, color: '#EF4444' }
+      { name: t('nav.singlePlayer'), value: singlePlayerGames, color: '#3B82F6' },
+      { name: t('nav.multiplayer'), value: multiplayerGames, color: '#EF4444' }
     ];
   };
 
@@ -161,7 +163,7 @@ const Stats: React.FC = () => {
                 <Trophy className="w-5 h-5 text-white" />
               </div>
               <div>
-                <p className="text-gray-400 text-sm">最高分數</p>
+                <p className="text-gray-400 text-sm">{t('stats.highestScore')}</p>
                 <p className="text-2xl font-bold text-white">{userStats.highestScore.toLocaleString()}</p>
               </div>
             </div>
@@ -173,7 +175,7 @@ const Stats: React.FC = () => {
                 <Target className="w-5 h-5 text-white" />
               </div>
               <div>
-                <p className="text-gray-400 text-sm">總遊戲數</p>
+                <p className="text-gray-400 text-sm">{t('stats.totalGames')}</p>
                 <p className="text-2xl font-bold text-white">{userStats.totalGames}</p>
               </div>
             </div>
@@ -185,7 +187,7 @@ const Stats: React.FC = () => {
                 <Clock className="w-5 h-5 text-white" />
               </div>
               <div>
-                <p className="text-gray-400 text-sm">總遊戲時間</p>
+                <p className="text-gray-400 text-sm">{t('stats.totalPlayTime')}</p>
                 <p className="text-2xl font-bold text-white">{formatDuration(userStats.totalPlayTime)}</p>
               </div>
             </div>
@@ -197,7 +199,7 @@ const Stats: React.FC = () => {
                 <TrendingUp className="w-5 h-5 text-white" />
               </div>
               <div>
-                <p className="text-gray-400 text-sm">平均分數</p>
+                <p className="text-gray-400 text-sm">{t('stats.averageScore')}</p>
                 <p className="text-2xl font-bold text-white">{Math.round(userStats.averageScore).toLocaleString()}</p>
               </div>
             </div>
@@ -210,7 +212,7 @@ const Stats: React.FC = () => {
           <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-6 border border-gray-700">
             <div className="flex items-center gap-3 mb-4">
               <BarChart3 className="w-5 h-5 text-blue-400" />
-              <h3 className="text-lg font-semibold text-white">近 7 天分數趨勢</h3>
+              <h3 className="text-lg font-semibold text-white">{t('stats.scoresTrend')}</h3>
             </div>
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
@@ -249,7 +251,7 @@ const Stats: React.FC = () => {
           <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-6 border border-gray-700">
             <div className="flex items-center gap-3 mb-4">
               <PieChart className="w-5 h-5 text-green-400" />
-              <h3 className="text-lg font-semibold text-white">遊戲類型分布</h3>
+              <h3 className="text-lg font-semibold text-white">{t('stats.gameTypeDistribution')}</h3>
             </div>
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
@@ -289,23 +291,23 @@ const Stats: React.FC = () => {
           <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-6 border border-gray-700">
             <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
               <Activity className="w-5 h-5 text-purple-400" />
-              單人模式統計
+              {t('stats.singlePlayerStats')}
             </h3>
             <div className="space-y-3">
               <div className="flex justify-between">
-                <span className="text-gray-400">遊戲次數</span>
+                <span className="text-gray-400">{t('stats.gamesPlayed')}</span>
                 <span className="text-white font-medium">{gameRecords.filter(r => r.gameType === 'single').length}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400">最高分數</span>
+                <span className="text-gray-400">{t('stats.highestScore')}</span>
                 <span className="text-white font-medium">{userStats.highestScore.toLocaleString()}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400">平均分數</span>
+                <span className="text-gray-400">{t('stats.averageScore')}</span>
                 <span className="text-white font-medium">{userStats.averageScore.toLocaleString()}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400">最高等級</span>
+                <span className="text-gray-400">{t('stats.highestLevel')}</span>
                 <span className="text-white font-medium">{Math.max(...gameRecords.map(r => r.level), 0)}</span>
               </div>
             </div>
@@ -314,23 +316,23 @@ const Stats: React.FC = () => {
           <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-6 border border-gray-700">
             <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
               <Zap className="w-5 h-5 text-red-400" />
-              多人對戰統計
+              {t('stats.multiplayerStats')}
             </h3>
             <div className="space-y-3">
               <div className="flex justify-between">
-                <span className="text-gray-400">對戰次數</span>
+                <span className="text-gray-400">{t('stats.battlesPlayed')}</span>
                 <span className="text-white font-medium">{gameRecords.filter(r => r.gameType === 'multiplayer').length}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400">勝利次數</span>
+                <span className="text-gray-400">{t('stats.wins')}</span>
                 <span className="text-white font-medium">{userStats.totalWins}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400">勝率</span>
+                <span className="text-gray-400">{t('stats.winRate')}</span>
                 <span className="text-white font-medium">{userStats.winRate}%</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400">連勝紀錄</span>
+                <span className="text-gray-400">{t('stats.bestStreak')}</span>
                 <span className="text-white font-medium">{userStats.bestStreak}</span>
               </div>
             </div>
@@ -352,11 +354,11 @@ const Stats: React.FC = () => {
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-white flex items-center gap-2">
               <Award className="w-5 h-5 text-yellow-400" />
-              成就進度
+              {t('achievements.progress')}
             </h3>
             <div className="text-right">
               <p className="text-2xl font-bold text-white">{unlockedAchievements.length}/{achievements.length}</p>
-              <p className="text-sm text-gray-400">已解鎖</p>
+              <p className="text-sm text-gray-400">{t('achievements.unlocked')}</p>
             </div>
           </div>
           
@@ -373,7 +375,7 @@ const Stats: React.FC = () => {
           <div>
             <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
               <Star className="w-5 h-5 text-yellow-400" />
-              已解鎖成就 ({unlockedAchievements.length})
+              {t('achievements.unlockedAchievements')} ({unlockedAchievements.length})
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {unlockedAchievements.map((achievement) => (
@@ -389,7 +391,7 @@ const Stats: React.FC = () => {
                     <h5 className="font-semibold text-white mb-1">{achievement.name}</h5>
                     <p className="text-sm text-gray-300 mb-2">{achievement.description}</p>
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-yellow-400 font-medium">已解鎖</span>
+                      <span className="text-yellow-400 font-medium">{t('achievements.unlocked')}</span>
                       <span className="text-gray-400">
                         {achievement.unlockedAt && formatDate(achievement.unlockedAt)}
                       </span>
@@ -406,7 +408,7 @@ const Stats: React.FC = () => {
           <div>
             <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
               <Medal className="w-5 h-5 text-gray-400" />
-              未解鎖成就 ({lockedAchievements.length})
+              {t('achievements.lockedAchievements')} ({lockedAchievements.length})
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {lockedAchievements.map((achievement) => (
@@ -420,8 +422,8 @@ const Stats: React.FC = () => {
                   <h5 className="font-semibold text-gray-300 mb-1">{achievement.name}</h5>
                   <p className="text-sm text-gray-400 mb-2">{achievement.description}</p>
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-gray-500">未解鎖</span>
-                    <span className="text-gray-500">進度：{achievement.progress || 0}/{achievement.maxProgress || '?'}</span>
+                    <span className="text-gray-500">{t('achievements.locked')}</span>
+                    <span className="text-gray-500">{t('achievements.progressLabel')}：{achievement.progress || 0}/{achievement.maxProgress || '?'}</span>
                   </div>
                 </div>
               ))}
@@ -441,7 +443,7 @@ const Stats: React.FC = () => {
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold text-white flex items-center gap-2">
             <Calendar className="w-5 h-5 text-blue-400" />
-            遊戲歷史 ({gameRecords.length})
+            {t('stats.gameHistory')} ({gameRecords.length})
           </h3>
         </div>
         
@@ -450,8 +452,8 @@ const Stats: React.FC = () => {
             <div className="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
               <Calendar className="w-8 h-8 text-gray-400" />
             </div>
-            <p className="text-gray-400 text-lg mb-2">還沒有遊戲記錄</p>
-            <p className="text-gray-500">開始遊戲來建立您的遊戲歷史吧！</p>
+            <p className="text-gray-400 text-lg mb-2">{t('stats.noGameRecords')}</p>
+            <p className="text-gray-500">{t('stats.startPlayingMessage')}</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -478,7 +480,7 @@ const Stats: React.FC = () => {
                     <div>
                       <div className="flex items-center gap-3">
                         <h5 className="font-semibold text-white">
-                          {record.gameType === 'single' ? '單人模式' : '多人對戰'}
+                          {record.gameType === 'single' ? t('nav.singlePlayer') : t('nav.multiplayer')}
                         </h5>
                         {record.gameType === 'multiplayer' && record.result && (
                           <span className={cn(
@@ -487,7 +489,7 @@ const Stats: React.FC = () => {
                               ? 'bg-green-600 text-green-100'
                               : 'bg-red-600 text-red-100'
                           )}>
-                            {record.result === 'win' ? '勝利' : '失敗'}
+                            {record.result === 'win' ? t('game.win') : t('game.lose')}
                           </span>
                         )}
                       </div>
@@ -498,19 +500,19 @@ const Stats: React.FC = () => {
                   <div className="text-right">
                     <div className="flex items-center gap-6">
                       <div>
-                        <p className="text-sm text-gray-400">分數</p>
+                        <p className="text-sm text-gray-400">{t('game.score')}</p>
                         <p className="font-semibold text-white">{record.score.toLocaleString()}</p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-400">等級</p>
+                        <p className="text-sm text-gray-400">{t('game.level')}</p>
                         <p className="font-semibold text-white">{record.level}</p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-400">行數</p>
+                        <p className="text-sm text-gray-400">{t('game.lines')}</p>
                         <p className="font-semibold text-white">{record.lines}</p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-400">時間</p>
+                        <p className="text-sm text-gray-400">{t('game.time')}</p>
                         <p className="font-semibold text-white">{formatDuration(record.duration)}</p>
                       </div>
                     </div>
@@ -530,7 +532,7 @@ const Stats: React.FC = () => {
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-indigo-900 flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-white text-lg">載入中...</p>
+          <p className="text-white text-lg">{t('common.loading')}</p>
         </div>
       </div>
     );
@@ -544,12 +546,12 @@ const Stats: React.FC = () => {
           <div className="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
             <User className="w-8 h-8 text-gray-400" />
           </div>
-          <p className="text-white text-lg mb-4">請先登入以查看個人統計</p>
+          <p className="text-white text-lg mb-4">{t('auth.loginRequired')}</p>
           <button
             onClick={() => navigate('/login')}
             className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
           >
-            前往登入
+            {t('nav.login')}
           </button>
         </div>
       </div>
@@ -573,7 +575,7 @@ const Stats: React.FC = () => {
               className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
-              返回
+              {t('common.back')}
             </button>
             
             <button
@@ -581,7 +583,7 @@ const Stats: React.FC = () => {
               className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
             >
               <Home className="w-4 h-4" />
-              首頁
+              {t('nav.home')}
             </button>
           </div>
           
@@ -589,7 +591,7 @@ const Stats: React.FC = () => {
             <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-600 rounded-lg flex items-center justify-center">
               <BarChart3 className="w-4 h-4 text-white" />
             </div>
-            <h1 className="text-xl font-bold text-white">個人統計</h1>
+            <h1 className="text-xl font-bold text-white">{t('nav.stats')}</h1>
           </div>
           
           {/* 用戶信息 */}
@@ -621,7 +623,7 @@ const Stats: React.FC = () => {
                   : 'text-gray-300 hover:text-white'
               )}
             >
-              概覽
+              {t('stats.overview')}
             </button>
             <button
               onClick={() => setActiveTab('achievements')}
@@ -632,7 +634,7 @@ const Stats: React.FC = () => {
                   : 'text-gray-300 hover:text-white'
               )}
             >
-              成就
+              {t('nav.achievements')}
             </button>
             <button
               onClick={() => setActiveTab('history')}
@@ -643,7 +645,7 @@ const Stats: React.FC = () => {
                   : 'text-gray-300 hover:text-white'
               )}
             >
-              歷史記錄
+              {t('stats.history')}
             </button>
           </div>
         </div>

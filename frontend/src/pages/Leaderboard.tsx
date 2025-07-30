@@ -19,11 +19,13 @@ import {
 import { cn } from '../lib/utils';
 import { leaderboardService, LeaderboardEntry } from '../lib/leaderboard';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 
 
 const Leaderboard: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [activeCategory, setActiveCategory] = useState<'singlePlayer' | 'multiplayer'>('singlePlayer');
   const [activeType, setActiveType] = useState<string>('score');
   const [searchTerm, setSearchTerm] = useState('');
@@ -71,8 +73,8 @@ const Leaderboard: React.FC = () => {
       });
     } catch (err) {
       console.error('載入排行榜失敗:', err);
-      setError('載入排行榜失敗，請稍後再試');
-      toast.error('載入排行榜失敗');
+      setError(t('leaderboard.loadError'));
+      toast.error(t('leaderboard.loadFailed'));
     } finally {
       setIsLoading(false);
     }
@@ -80,7 +82,7 @@ const Leaderboard: React.FC = () => {
 
   const handleRefresh = async () => {
     await loadLeaderboardData();
-    toast.success('排行榜已更新！');
+    toast.success(t('leaderboard.updated'));
   };
 
   const getCurrentData = (): LeaderboardEntry[] => {
@@ -154,7 +156,7 @@ const Leaderboard: React.FC = () => {
           )}
         >
           <Target className="w-4 h-4" />
-          單人模式
+          {t('leaderboard.categories.singlePlayer')}
         </button>
         <button
           onClick={() => {
@@ -169,7 +171,7 @@ const Leaderboard: React.FC = () => {
           )}
         >
           <Zap className="w-4 h-4" />
-          多人對戰
+          {t('leaderboard.categories.multiplayer')}
         </button>
       </div>
     );
@@ -178,13 +180,13 @@ const Leaderboard: React.FC = () => {
   const renderTypeTabs = () => {
     const types = activeCategory === 'singlePlayer' 
       ? [
-          { key: 'score', label: '最高分數', icon: Trophy },
-          { key: 'level', label: '最高等級', icon: TrendingUp },
-          { key: 'lines', label: '消除行數', icon: Target }
+          { key: 'score', label: t('leaderboard.types.score'), icon: Trophy },
+          { key: 'level', label: t('leaderboard.types.level'), icon: TrendingUp },
+          { key: 'lines', label: t('leaderboard.types.lines'), icon: Target }
         ]
       : [
-          { key: 'wins', label: '勝利次數', icon: Trophy },
-          { key: 'winRate', label: '勝率排行', icon: Star }
+          { key: 'wins', label: t('leaderboard.types.wins'), icon: Trophy },
+          { key: 'winRate', label: t('leaderboard.types.winRate'), icon: Star }
         ];
     
     return (
@@ -249,7 +251,7 @@ const Leaderboard: React.FC = () => {
                 <h4 className="font-semibold text-white">{entry.displayName}</h4>
                 {isCurrentUser && (
                   <span className="px-2 py-1 bg-blue-600 text-blue-100 text-xs rounded-full">
-                    你
+                    {t('leaderboard.you')}
                   </span>
                 )}
               </div>
@@ -262,30 +264,30 @@ const Leaderboard: React.FC = () => {
             {activeCategory === 'singlePlayer' ? (
               <>
                 <div className="text-right">
-                  <p className="text-sm text-gray-400">分數</p>
+                  <p className="text-sm text-gray-400">{t('game.score')}</p>
                   <p className="font-semibold text-white">{formatNumber(entry.score || 0)}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm text-gray-400">等級</p>
+                  <p className="text-sm text-gray-400">{t('game.level')}</p>
                   <p className="font-semibold text-white">{entry.level}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm text-gray-400">行數</p>
+                  <p className="text-sm text-gray-400">{t('game.lines')}</p>
                   <p className="font-semibold text-white">{entry.lines}</p>
                 </div>
               </>
             ) : (
               <>
                 <div className="text-right">
-                  <p className="text-sm text-gray-400">勝利</p>
+                  <p className="text-sm text-gray-400">{t('leaderboard.wins')}</p>
                   <p className="font-semibold text-white">{entry.wins}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm text-gray-400">失敗</p>
+                  <p className="text-sm text-gray-400">{t('leaderboard.losses')}</p>
                   <p className="font-semibold text-white">{entry.losses}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm text-gray-400">勝率</p>
+                  <p className="text-sm text-gray-400">{t('leaderboard.winRate')}</p>
                   <p className="font-semibold text-white">{entry.winRate}%</p>
                 </div>
               </>
@@ -320,7 +322,7 @@ const Leaderboard: React.FC = () => {
             
             <div>
               <h4 className="font-semibold text-white">{currentUser.name}</h4>
-              <p className="text-sm text-blue-300">您的排名</p>
+              <p className="text-sm text-blue-300">{t('leaderboard.yourRank')}</p>
             </div>
           </div>
           
@@ -354,7 +356,7 @@ const Leaderboard: React.FC = () => {
               className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
-              返回
+              {t('common.back')}
             </button>
             
             <button
@@ -362,7 +364,7 @@ const Leaderboard: React.FC = () => {
               className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
             >
               <Home className="w-4 h-4" />
-              首頁
+              {t('common.home')}
             </button>
           </div>
           
@@ -370,7 +372,7 @@ const Leaderboard: React.FC = () => {
             <div className="w-8 h-8 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-lg flex items-center justify-center">
               <Trophy className="w-4 h-4 text-white" />
             </div>
-            <h1 className="text-xl font-bold text-white">排行榜</h1>
+            <h1 className="text-xl font-bold text-white">{t('leaderboard.title')}</h1>
           </div>
           
           {/* 用戶信息和刷新按鈕 */}
@@ -381,7 +383,7 @@ const Leaderboard: React.FC = () => {
               className="flex items-center gap-2 px-3 py-2 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
             >
               <RefreshCw className={cn('w-4 h-4', isLoading && 'animate-spin')} />
-              刷新
+              {t('leaderboard.refresh')}
             </button>
             
             {isAuthenticated && currentUser && (
@@ -435,7 +437,7 @@ const Leaderboard: React.FC = () => {
                 <div className="text-right">
                   <p className="text-2xl font-bold text-white">#{getUserRank()?.rank}</p>
                   <p className="text-sm text-blue-300">
-                    {activeCategory === 'singlePlayer' ? '單人模式' : '多人對戰'}
+                    {activeCategory === 'singlePlayer' ? t('leaderboard.singlePlayer') : t('leaderboard.multiplayer')}
                   </p>
                 </div>
               </div>
@@ -445,13 +447,13 @@ const Leaderboard: React.FC = () => {
           {isAuthenticated && currentUser?.isGuest && (
             <div className="bg-gradient-to-r from-blue-500/20 to-purple-500/20 backdrop-blur-sm rounded-lg p-4 border border-blue-500/30 mb-6">
               <div className="text-center">
-                <p className="text-white font-semibold mb-2">登入以查看你的排名</p>
-                <p className="text-white/60 text-sm mb-4">註冊帳號即可參與全球排行榜競爭</p>
+                <p className="text-white font-semibold mb-2">{t('leaderboard.loginToViewRank')}</p>
+                <p className="text-white/60 text-sm mb-4">{t('leaderboard.registerToCompete')}</p>
                 <button
                   onClick={() => navigate('/login')}
                   className="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg hover:from-blue-600 hover:to-purple-600 transition-all duration-300"
                 >
-                  立即登入
+                  {t('leaderboard.loginNow')}
                 </button>
               </div>
             </div>
@@ -471,7 +473,7 @@ const Leaderboard: React.FC = () => {
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="搜索玩家..."
+                placeholder={t('leaderboard.searchPlayers')}
                 className="pl-10 pr-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500 focus:outline-none transition-colors w-64"
               />
             </div>
@@ -482,7 +484,7 @@ const Leaderboard: React.FC = () => {
             {isLoading ? (
               <div className="text-center py-12">
                 <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4" />
-                <p className="text-gray-400">載入中...</p>
+                <p className="text-gray-400">{t('common.loading')}</p>
               </div>
             ) : error ? (
               <div className="text-center py-12">
@@ -491,7 +493,7 @@ const Leaderboard: React.FC = () => {
                   onClick={loadLeaderboardData}
                   className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
                 >
-                  重試
+                  {t('common.retry')}
                 </button>
               </div>
             ) : currentData.length === 0 ? (
@@ -500,10 +502,10 @@ const Leaderboard: React.FC = () => {
                   <Trophy className="w-8 h-8 text-gray-400" />
                 </div>
                 <p className="text-gray-400 text-lg mb-2">
-                  {searchTerm ? '沒有找到匹配的玩家' : '暫無排行榜數據'}
+                  {searchTerm ? t('leaderboard.noPlayersFound') : t('leaderboard.noData')}
                 </p>
                 <p className="text-gray-500">
-                  {searchTerm ? '嘗試其他搜索詞' : '開始遊戲來建立排行榜吧！'}
+                  {searchTerm ? t('leaderboard.tryOtherSearch') : t('leaderboard.startGameToCreateLeaderboard')}
                 </p>
               </div>
             ) : (
@@ -514,7 +516,7 @@ const Leaderboard: React.FC = () => {
           {/* 底部說明 */}
           <div className="mt-8 text-center">
             <p className="text-gray-400 text-sm">
-              排行榜每小時更新一次 • 顯示前 100 名玩家
+              {t('leaderboard.updateInfo')}
             </p>
             {!isAuthenticated && (
               <p className="text-blue-400 text-sm mt-2">
@@ -522,9 +524,9 @@ const Leaderboard: React.FC = () => {
                   onClick={() => navigate('/login')}
                   className="hover:text-blue-300 underline"
                 >
-                  登入帳號
+                  {t('auth.login')}
                 </button>
-                {' '}查看您的排名和完整統計
+                {' '}{t('leaderboard.viewRankAndStats')}
               </p>
             )}
           </div>

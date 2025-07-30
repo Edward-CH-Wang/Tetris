@@ -1,11 +1,14 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useUserStore } from '../store/userStore';
 import { Play, Users, Trophy, Settings, LogIn, UserPlus } from 'lucide-react';
 import { cn } from '../lib/utils';
+import LanguageSwitcher from '../components/LanguageSwitcher';
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { currentUser, isAuthenticated, loginWithGoogle, loginAsGuest } = useUserStore();
 
   const handleSinglePlayer = () => {
@@ -44,11 +47,12 @@ const Home: React.FC = () => {
             <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
               <div className="text-white font-bold text-lg">T</div>
             </div>
-            <h1 className="text-2xl font-bold text-white">俄羅斯方塊</h1>
+            <h1 className="text-2xl font-bold text-white">{t('home.title')}</h1>
           </div>
           
           {/* 用戶信息或登入按鈕 */}
           <div className="flex items-center gap-4">
+            <LanguageSwitcher />
             {isAuthenticated && currentUser ? (
               <div className="flex items-center gap-3">
                 {currentUser.avatar ? (
@@ -64,7 +68,7 @@ const Home: React.FC = () => {
                 )}
                 <span className="text-white text-sm">{currentUser.name}</span>
                 {currentUser.isGuest && (
-                  <span className="text-xs bg-yellow-600 text-white px-2 py-1 rounded-full">訪客</span>
+                  <span className="text-xs bg-yellow-600 text-white px-2 py-1 rounded-full">{t('common.guest')}</span>
                 )}
               </div>
             ) : (
@@ -74,14 +78,14 @@ const Home: React.FC = () => {
                   className="flex items-center gap-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors text-sm"
                 >
                   <UserPlus className="w-4 h-4" />
-                  訪客模式
+                  {t('auth.guestMode')}
                 </button>
                 <button
                   onClick={loginWithGoogle}
                   className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm"
                 >
                   <LogIn className="w-4 h-4" />
-                  Google 登入
+                  {t('nav.login')}
                 </button>
               </div>
             )}
@@ -93,11 +97,10 @@ const Home: React.FC = () => {
           {/* 遊戲標題和介紹 */}
           <div className="text-center mb-16">
             <h2 className="text-6xl font-bold mb-6 bg-gradient-to-r from-blue-400 via-purple-400 to-indigo-400 bg-clip-text text-transparent">
-              俄羅斯方塊線上對戰
+              {t('home.title')}
             </h2>
             <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
-              經典的俄羅斯方塊遊戲，支援單人模式和多人線上對戰。
-              與全球玩家即時對戰，挑戰你的極限！
+              {t('home.subtitle')}
             </p>
             
             {/* 特色功能 */}
@@ -106,24 +109,24 @@ const Home: React.FC = () => {
                 <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center mx-auto mb-4">
                   <Play className="w-6 h-6 text-white" />
                 </div>
-                <h3 className="text-lg font-semibold text-white mb-2">單人模式</h3>
-                <p className="text-gray-300 text-sm">經典俄羅斯方塊體驗，挑戰高分記錄</p>
+                <h3 className="text-lg font-semibold text-white mb-2">{t('home.features.singlePlayer')}</h3>
+                <p className="text-gray-300 text-sm">{t('home.features.singlePlayerDesc')}</p>
               </div>
               
               <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20">
                 <div className="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center mx-auto mb-4">
                   <Users className="w-6 h-6 text-white" />
                 </div>
-                <h3 className="text-lg font-semibold text-white mb-2">多人對戰</h3>
-                <p className="text-gray-300 text-sm">與其他玩家即時對戰，體驗競技樂趣</p>
+                <h3 className="text-lg font-semibold text-white mb-2">{t('home.features.multiplayer')}</h3>
+                <p className="text-gray-300 text-sm">{t('home.features.multiplayerDesc')}</p>
               </div>
               
               <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20">
                 <div className="w-12 h-12 bg-indigo-500 rounded-lg flex items-center justify-center mx-auto mb-4">
                   <Trophy className="w-6 h-6 text-white" />
                 </div>
-                <h3 className="text-lg font-semibold text-white mb-2">排行榜</h3>
-                <p className="text-gray-300 text-sm">查看全球排名，追蹤個人戰績</p>
+                <h3 className="text-lg font-semibold text-white mb-2">{t('home.features.leaderboard')}</h3>
+                <p className="text-gray-300 text-sm">{t('home.features.leaderboardDesc')}</p>
               </div>
             </div>
           </div>
@@ -140,8 +143,8 @@ const Home: React.FC = () => {
                   <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mb-4 group-hover:bg-white/30 transition-colors">
                     <Play className="w-8 h-8" />
                   </div>
-                  <h3 className="text-2xl font-bold mb-2">單人遊戲</h3>
-                  <p className="text-blue-100 text-center">經典俄羅斯方塊體驗，挑戰你的最高分數</p>
+                  <h3 className="text-2xl font-bold mb-2">{t('nav.singlePlayer')}</h3>
+                  <p className="text-blue-100 text-center">{t('home.features.singlePlayerDesc')}</p>
                 </div>
               </button>
             </div>
@@ -156,8 +159,8 @@ const Home: React.FC = () => {
                   <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mb-4 group-hover:bg-white/30 transition-colors">
                     <Users className="w-8 h-8" />
                   </div>
-                  <h3 className="text-2xl font-bold mb-2">多人對戰</h3>
-                  <p className="text-purple-100 text-center">與全球玩家即時對戰，體驗競技樂趣</p>
+                  <h3 className="text-2xl font-bold mb-2">{t('nav.multiplayer')}</h3>
+                  <p className="text-purple-100 text-center">{t('home.features.multiplayerDesc')}</p>
                 </div>
               </button>
             </div>
@@ -175,11 +178,11 @@ const Home: React.FC = () => {
             >
               <div className="flex flex-col items-center">
                 <Trophy className="w-8 h-8 mb-3 text-yellow-400" />
-                <h4 className="font-semibold mb-1">個人戰績</h4>
-                <p className="text-sm text-gray-300 text-center">查看詳細的遊戲統計和歷史記錄</p>
-                {(!isAuthenticated || currentUser?.isGuest) && (
-                  <p className="text-xs text-yellow-400 mt-2">需要登入帳號</p>
-                )}
+                <h4 className="font-semibold mb-1">{t('nav.stats')}</h4>
+                <p className="text-sm text-gray-300 text-center">{t('home.features.statsDesc')}</p>
+                  {(!isAuthenticated || currentUser?.isGuest) && (
+                    <p className="text-xs text-yellow-400 mt-2 text-center">{t('auth.loginRequired')}</p>
+                  )}
               </div>
             </button>
 
@@ -189,19 +192,19 @@ const Home: React.FC = () => {
             >
               <div className="flex flex-col items-center">
                 <Trophy className="w-8 h-8 mb-3 text-orange-400" />
-                <h4 className="font-semibold mb-1">排行榜</h4>
-                <p className="text-sm text-gray-300 text-center">查看全球玩家排名和成就</p>
-              </div>
-            </button>
-
-            <button
-              onClick={handleSettings}
-              className="bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white rounded-lg p-6 transition-all duration-300 border border-white/20"
-            >
-              <div className="flex flex-col items-center">
-                <Settings className="w-8 h-8 mb-3 text-gray-400" />
-                <h4 className="font-semibold mb-1">設定</h4>
-                <p className="text-sm text-gray-300 text-center">調整遊戲設定和個人偏好</p>
+                <h4 className="font-semibold mb-1">{t('nav.leaderboard')}</h4>
+                <p className="text-sm text-gray-300 text-center">{t('home.features.leaderboardDesc')}</p>
+                </div>
+              </button>
+              
+              <button
+                onClick={() => navigate('/settings')}
+                className="bg-white/10 hover:bg-white/20 rounded-lg p-6 transition-all duration-200 backdrop-blur-sm border border-white/20"
+              >
+                <div className="flex flex-col items-center">
+                  <Settings className="w-8 h-8 mb-3 text-gray-400" />
+                  <h4 className="font-semibold mb-1">{t('nav.settings')}</h4>
+                  <p className="text-sm text-gray-300 text-center">{t('home.features.settingsDesc')}</p>
               </div>
             </button>
           </div>

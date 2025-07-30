@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { useGameStore } from '../store/gameStore';
 import { useUserStore } from '../store/userStore';
 import { Play, Pause, RotateCcw, Trophy, Target, Zap } from 'lucide-react';
@@ -9,6 +10,7 @@ interface GameInfoProps {
 }
 
 const GameInfo: React.FC<GameInfoProps> = ({ className }) => {
+  const { t } = useTranslation();
   const {
     score,
     level,
@@ -34,7 +36,7 @@ const GameInfo: React.FC<GameInfoProps> = ({ className }) => {
     return (
       <div key={index} className="bg-gray-800 rounded-lg p-2 border border-gray-600">
         <h4 className="text-xs font-semibold text-gray-300 mb-1 text-center">
-          {index === 0 ? '下一個' : `第${index + 1}個`}
+          {index === 0 ? t('game.next') : t('game.nextNumber', { number: index + 1 })}
         </h4>
         <div className="flex justify-center">
           <div className="grid gap-0.5" style={{ gridTemplateColumns: `repeat(${maxSize}, 1fr)` }}>
@@ -66,7 +68,7 @@ const GameInfo: React.FC<GameInfoProps> = ({ className }) => {
     
     return (
       <div className="space-y-2">
-        <h3 className="text-sm font-semibold text-gray-300 text-center">預覽方塊</h3>
+        <h3 className="text-sm font-semibold text-gray-300 text-center">{t('game.nextPieces')}</h3>
         <div className="space-y-2">
           {nextPieces.map((piece, index) => renderSinglePiece(piece, index))}
         </div>
@@ -82,7 +84,7 @@ const GameInfo: React.FC<GameInfoProps> = ({ className }) => {
         <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-3 text-white">
           <div className="flex items-center gap-2 mb-1">
             <Trophy className="w-4 h-4" />
-            <span className="text-sm font-medium">分數</span>
+            <span className="text-sm font-medium">{t('game.score')}</span>
           </div>
           <div className="text-2xl font-bold">{score.toLocaleString()}</div>
         </div>
@@ -92,7 +94,7 @@ const GameInfo: React.FC<GameInfoProps> = ({ className }) => {
           <div className="bg-gray-800 rounded-lg p-3 border border-gray-600">
             <div className="flex items-center gap-2 mb-1">
               <Target className="w-4 h-4 text-green-400" />
-              <span className="text-xs text-gray-300">等級</span>
+              <span className="text-xs text-gray-300">{t('game.level')}</span>
             </div>
             <div className="text-xl font-bold text-green-400">{level}</div>
           </div>
@@ -100,7 +102,7 @@ const GameInfo: React.FC<GameInfoProps> = ({ className }) => {
           <div className="bg-gray-800 rounded-lg p-3 border border-gray-600">
             <div className="flex items-center gap-2 mb-1">
               <Zap className="w-4 h-4 text-yellow-400" />
-              <span className="text-xs text-gray-300">行數</span>
+              <span className="text-xs text-gray-300">{t('game.lines')}</span>
             </div>
             <div className="text-xl font-bold text-yellow-400">{lines}</div>
           </div>
@@ -133,7 +135,7 @@ const GameInfo: React.FC<GameInfoProps> = ({ className }) => {
               {currentUser.name}
             </div>
             <div className="text-xs text-gray-400">
-              {currentUser.isGuest ? '訪客模式' : '已登入'}
+              {currentUser.isGuest ? t('auth.guestMode') : t('auth.loggedIn')}
             </div>
           </div>
         </div>
@@ -142,11 +144,11 @@ const GameInfo: React.FC<GameInfoProps> = ({ className }) => {
           <div className="mt-3 pt-3 border-t border-gray-700">
             <div className="grid grid-cols-2 gap-2 text-xs">
               <div>
-                <span className="text-gray-400">最高分：</span>
+                <span className="text-gray-400">{t('stats.highestScore')}:</span>
                 <span className="text-white font-medium">{userStats.highestScore.toLocaleString()}</span>
               </div>
               <div>
-                <span className="text-gray-400">勝率：</span>
+                <span className="text-gray-400">{t('stats.winRate')}:</span>
                 <span className="text-white font-medium">{userStats.winRate}%</span>
               </div>
             </div>
@@ -166,7 +168,7 @@ const GameInfo: React.FC<GameInfoProps> = ({ className }) => {
             className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
           >
             <Play className="w-5 h-5" />
-            開始遊戲
+            {t('game.startGame')}
           </button>
         )}
         
@@ -176,7 +178,7 @@ const GameInfo: React.FC<GameInfoProps> = ({ className }) => {
             className="w-full bg-yellow-600 hover:bg-yellow-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
           >
             <Pause className="w-5 h-5" />
-            暫停遊戲
+            {t('game.pauseGame')}
           </button>
         )}
         
@@ -186,7 +188,7 @@ const GameInfo: React.FC<GameInfoProps> = ({ className }) => {
             className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
           >
             <Play className="w-5 h-5" />
-            繼續遊戲
+            {t('game.resumeGame')}
           </button>
         )}
         
@@ -196,7 +198,7 @@ const GameInfo: React.FC<GameInfoProps> = ({ className }) => {
             className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
           >
             <RotateCcw className="w-5 h-5" />
-            {gameStatus === 'gameOver' ? '重新開始' : '初始化遊戲'}
+            {gameStatus === 'gameOver' ? t('game.restart') : t('game.initGame')}
           </button>
         )}
       </div>
@@ -237,12 +239,7 @@ const GameInfo: React.FC<GameInfoProps> = ({ className }) => {
               'bg-red-400': gameStatus === 'gameOver'
             }
           )} />
-          {{
-            idle: '待機中',
-            playing: '遊戲中',
-            paused: '已暫停',
-            gameOver: '遊戲結束'
-          }[gameStatus]}
+          {t(`game.status.${gameStatus}`)}
         </div>
       </div>
     </div>

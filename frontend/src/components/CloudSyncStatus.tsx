@@ -1,6 +1,7 @@
 import React from 'react';
 import { Cloud, CloudOff, Wifi, WifiOff, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { useUserStore } from '../store/userStore';
+import { useTranslation } from 'react-i18next';
 
 interface CloudSyncStatusProps {
   className?: string;
@@ -11,6 +12,7 @@ const CloudSyncStatus: React.FC<CloudSyncStatusProps> = ({
   className = '',
   showDetails = false 
 }) => {
+  const { t } = useTranslation();
   const { 
     currentUser,
     isFirestoreConnected, 
@@ -30,7 +32,7 @@ const CloudSyncStatus: React.FC<CloudSyncStatusProps> = ({
     try {
       await syncToCloud();
     } catch (error) {
-      console.error('手動同步失敗:', error);
+      console.error('Manual sync failed:', error);
     } finally {
       setIsSyncing(false);
     }
@@ -45,20 +47,20 @@ const CloudSyncStatus: React.FC<CloudSyncStatusProps> = ({
   };
 
   const formatLastSyncTime = (time: Date | null) => {
-    if (!time) return '從未同步';
+    if (!time) return t('cloudSync.neverSynced');
     
     const now = new Date();
     const diff = now.getTime() - time.getTime();
     const minutes = Math.floor(diff / 60000);
     
-    if (minutes < 1) return '剛剛同步';
-    if (minutes < 60) return `${minutes}分鐘前`;
+    if (minutes < 1) return t('cloudSync.justSynced');
+    if (minutes < 60) return t('cloudSync.minutesAgo', { count: minutes });
     
     const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours}小時前`;
+    if (hours < 24) return t('cloudSync.hoursAgo', { count: hours });
     
     const days = Math.floor(hours / 24);
-    return `${days}天前`;
+    return t('cloudSync.daysAgo', { count: days });
   };
 
   const getStatusIcon = () => {
@@ -83,7 +85,7 @@ const CloudSyncStatus: React.FC<CloudSyncStatusProps> = ({
 
   const getStatusText = () => {
     if (currentUser?.isGuest) {
-      return '訪客模式';
+      return t('cloudSync.guestMode');
     }
     
     // 檢查 Firebase 配置
@@ -93,22 +95,22 @@ const CloudSyncStatus: React.FC<CloudSyncStatusProps> = ({
       apiKey === "AIzaSyExample123456789";
     
     if (isUsingExampleConfig) {
-      return '配置錯誤';
+      return t('cloudSync.configError');
     }
     
     if (!isFirestoreConnected) {
-      return '連接失敗';
+      return t('cloudSync.connectionFailed');
     }
     
     if (!isCloudSyncEnabled) {
-      return '同步已停用';
+      return t('cloudSync.syncDisabled');
     }
     
     if (isSyncing) {
-      return '同步中...';
+      return t('cloudSync.syncing');
     }
     
-    return '雲端同步';
+    return t('cloudSync.cloudSync');
   };
 
   const getStatusColor = () => {
@@ -155,7 +157,7 @@ const CloudSyncStatus: React.FC<CloudSyncStatusProps> = ({
                 disabled={isSyncing}
                 className="px-3 py-1 text-xs bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white rounded transition-colors"
               >
-                {isSyncing ? '同步中...' : '手動同步'}
+                {isSyncing ? t('cloudSync.syncing') : t('cloudSync.manualSync')}
               </button>
             )}
             
@@ -167,7 +169,7 @@ const CloudSyncStatus: React.FC<CloudSyncStatusProps> = ({
                   : 'bg-green-600 hover:bg-green-700 text-white'
               }`}
             >
-              {isCloudSyncEnabled ? '停用同步' : '啟用同步'}
+              {isCloudSyncEnabled ? t('cloudSync.disableSync') : t('cloudSync.enableSync')}
             </button>
           </div>
         )}
@@ -175,34 +177,34 @@ const CloudSyncStatus: React.FC<CloudSyncStatusProps> = ({
       
       <div className="space-y-2 text-sm text-gray-400">
         <div className="flex items-center justify-between">
-          <span>連接狀態:</span>
+          <span>{t('cloudSync.connectionStatus')}:</span>
           <div className="flex items-center space-x-1">
             {isFirestoreConnected ? (
               <>
                 <Wifi className="w-3 h-3 text-green-400" />
-                <span className="text-green-400">已連接</span>
+                <span className="text-green-400">{t('cloudSync.connected')}</span>
               </>
             ) : (
               <>
                 <WifiOff className="w-3 h-3 text-red-400" />
-                <span className="text-red-400">未連接</span>
+                <span className="text-red-400">{t('cloudSync.disconnected')}</span>
               </>
             )}
           </div>
         </div>
         
         <div className="flex items-center justify-between">
-          <span>同步狀態:</span>
+          <span>{t('cloudSync.syncStatus')}:</span>
           <div className="flex items-center space-x-1">
             {isCloudSyncEnabled ? (
               <>
                 <CheckCircle className="w-3 h-3 text-green-400" />
-                <span className="text-green-400">已啟用</span>
+                <span className="text-green-400">{t('cloudSync.enabled')}</span>
               </>
             ) : (
               <>
                 <AlertCircle className="w-3 h-3 text-yellow-400" />
-                <span className="text-yellow-400">已停用</span>
+                <span className="text-yellow-400">{t('cloudSync.disabled')}</span>
               </>
             )}
           </div>
@@ -210,7 +212,7 @@ const CloudSyncStatus: React.FC<CloudSyncStatusProps> = ({
         
         {isCloudSyncEnabled && (
           <div className="flex items-center justify-between">
-            <span>最後同步:</span>
+            <span>{t('cloudSync.lastSync')}:</span>
             <span className="text-gray-300">
               {formatLastSyncTime(lastSyncTime)}
             </span>
@@ -220,14 +222,14 @@ const CloudSyncStatus: React.FC<CloudSyncStatusProps> = ({
         {currentUser?.isGuest && (
           <div className="mt-3 p-2 bg-yellow-900/20 border border-yellow-700/30 rounded text-yellow-300 text-xs">
             <AlertCircle className="w-3 h-3 inline mr-1" />
-            訪客模式下無法使用雲端同步功能，請登入帳戶以保存戰績數據。
+            {t('cloudSync.guestModeWarning')}
           </div>
         )}
         
         {!isFirestoreConnected && !currentUser?.isGuest && (
           <div className="mt-3 p-2 bg-red-900/20 border border-red-700/30 rounded text-red-300 text-xs">
             <AlertCircle className="w-3 h-3 inline mr-1" />
-            無法連接到雲端服務，請檢查網路連接或 Firebase 配置。
+            {t('cloudSync.connectionError')}
           </div>
         )}
       </div>

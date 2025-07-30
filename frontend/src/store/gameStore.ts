@@ -1,8 +1,8 @@
 import { create } from 'zustand';
 import { leaderboardService } from '../lib/leaderboard';
 
-// 俄羅斯方塊形狀定義
-export const TETRIS_SHAPES = {
+// 方塊墜落形狀定義
+export const BLOCKFALL_SHAPES = {
   I: [
     [1, 1, 1, 1]
   ],
@@ -32,7 +32,7 @@ export const TETRIS_SHAPES = {
   ]
 };
 
-export type TetrominoType = keyof typeof TETRIS_SHAPES;
+export type TetrominoType = keyof typeof BLOCKFALL_SHAPES;
 
 export interface Tetromino {
   shape: number[][];
@@ -114,13 +114,13 @@ const createEmptyBoard = (): number[][] => {
 
 // 生成隨機方塊
 const generateRandomPiece = (): Tetromino => {
-  const types = Object.keys(TETRIS_SHAPES) as TetrominoType[];
+  const types = Object.keys(BLOCKFALL_SHAPES) as TetrominoType[];
   const randomType = types[Math.floor(Math.random() * types.length)];
   
   return {
-    shape: TETRIS_SHAPES[randomType],
+    shape: BLOCKFALL_SHAPES[randomType],
     type: randomType,
-    x: Math.floor(10 / 2) - Math.floor(TETRIS_SHAPES[randomType][0].length / 2),
+    x: Math.floor(10 / 2) - Math.floor(BLOCKFALL_SHAPES[randomType][0].length / 2),
     y: 0,
     color: PIECE_COLORS[randomType]
   };
@@ -162,7 +162,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   // 初始化遊戲
   initGame: () => {
     // 從localStorage讀取設定，獲取預覽方塊數量
-    const savedSettings = localStorage.getItem('tetris-settings');
+    const savedSettings = localStorage.getItem('blockfall-settings');
     let nextPieceCount = 3; // 默認3個
     if (savedSettings) {
       try {
