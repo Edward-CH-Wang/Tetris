@@ -1,7 +1,7 @@
 {
-  "name": "Blockfall - Free Online Tetris Game",
+  "name": "Blockfall - Free Online Block Puzzle Game",
   "short_name": "Blockfall",
-  "description": "Play the ultimate free online Tetris game! Enjoy classic block-falling puzzle gameplay with multiplayer mode and leaderboards.",
+  "description": "Play the ultimate free online block puzzle game! Enjoy classic falling blocks gameplay with multiplayer mode and leaderboards.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#1F2937",

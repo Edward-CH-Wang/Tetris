@@ -8,7 +8,7 @@ interface PageTitleOptions {
 export const usePageTitle = ({ title, description }: PageTitleOptions) => {
   useEffect(() => {
     // 更新頁面標題
-    const fullTitle = `${title} | Blockfall - Free Online Tetris Game`;
+    const fullTitle = `${title} | Blockfall - Free Online Block Puzzle Game`;
     document.title = fullTitle;
     
     // 更新meta描述（如果提供）
@@ -26,7 +26,7 @@ export const usePageTitle = ({ title, description }: PageTitleOptions) => {
     
     // 清理函數：恢復默認標題
     return () => {
-      document.title = 'Blockfall - Free Online Tetris Game | Play Classic Puzzle Game';
+      document.title = 'Blockfall - Free Online Block Puzzle Game | Play Classic Falling Blocks';
     };
   }, [title, description]);
 };
@@ -35,30 +35,30 @@ export const usePageTitle = ({ title, description }: PageTitleOptions) => {
 export const PAGE_SEO_DATA = {
   home: {
     title: 'Home',
-    description: 'Play Blockfall, the ultimate free online Tetris game! Enjoy classic block-falling puzzle gameplay with multiplayer mode, leaderboards, and smooth controls.'
+    description: 'Play Blockfall, the ultimate free online block puzzle game! Enjoy classic falling blocks gameplay with multiplayer mode, leaderboards, and smooth controls.'
   },
   singlePlayer: {
     title: 'Single Player',
-    description: 'Play Tetris in single player mode. Challenge yourself with classic block-falling puzzle gameplay and try to achieve the highest score!'
+    description: 'Play block puzzle in single player mode. Challenge yourself with classic falling blocks gameplay and try to achieve the highest score!'
   },
   multiplayer: {
     title: 'Multiplayer',
-    description: 'Play Tetris with friends online! Join multiplayer rooms and compete in real-time block-falling puzzle battles.'
+    description: 'Play block puzzle with friends online! Join multiplayer rooms and compete in real-time falling blocks battles.'
   },
   leaderboard: {
     title: 'Leaderboard',
-    description: 'Check the global leaderboard and see how you rank against other Tetris players worldwide. Compete for the top scores!'
+    description: 'Check the global leaderboard and see how you rank against other block puzzle players worldwide. Compete for the top scores!'
   },
   stats: {
     title: 'Statistics',
-    description: 'View your personal Tetris game statistics, including games played, high scores, and performance metrics.'
+    description: 'View your personal block puzzle game statistics, including games played, high scores, and performance metrics.'
   },
   settings: {
     title: 'Settings',
-    description: 'Customize your Tetris game experience. Adjust controls, graphics, sound settings, and language preferences.'
+    description: 'Customize your block puzzle game experience. Adjust controls, graphics, sound settings, and language preferences.'
   },
   login: {
     title: 'Login',
-    description: 'Sign in to your Blockfall account to save your progress, compete on leaderboards, and play multiplayer Tetris games.'
+    description: 'Sign in to your Blockfall account to save your progress, compete on leaderboards, and play multiplayer block puzzle games.'
   }
 };
