@@ -20,6 +20,7 @@ import { cn } from '../lib/utils';
 import { leaderboardService, LeaderboardEntry } from '../lib/leaderboard';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
+import { usePageTitle, PAGE_SEO_DATA } from '../hooks/usePageTitle';
 
 
 
@@ -30,6 +31,9 @@ const Leaderboard: React.FC = () => {
   const [activeType, setActiveType] = useState<string>('score');
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  
+  // SEO優化：設置頁面標題和描述
+  usePageTitle(PAGE_SEO_DATA.leaderboard);
   const [leaderboardData, setLeaderboardData] = useState<{
     singlePlayer: { [key: string]: LeaderboardEntry[] };
     multiplayer: { [key: string]: LeaderboardEntry[] };

@@ -7,6 +7,7 @@ import GameBoard from '../components/GameBoard';
 import GameInfo from '../components/GameInfo';
 import { ArrowLeft, Home } from 'lucide-react';
 import { toast } from 'sonner';
+import { usePageTitle, PAGE_SEO_DATA } from '../hooks/usePageTitle';
 
 const SinglePlayer: React.FC = () => {
   const navigate = useNavigate();
@@ -24,6 +25,9 @@ const SinglePlayer: React.FC = () => {
     isAuthenticated, 
     addGameRecord 
   } = useUserStore();
+  
+  // SEO優化：設置頁面標題和描述
+  usePageTitle(PAGE_SEO_DATA.singlePlayer);
 
   // 初始化遊戲
   useEffect(() => {

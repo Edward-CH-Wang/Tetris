@@ -6,12 +6,16 @@ import { ArrowLeft, Home, Mail, Lock, Eye, EyeOff, User, LogIn } from 'lucide-re
 import { toast } from 'sonner';
 import { cn } from '../lib/utils';
 import LanguageSwitcher from '../components/LanguageSwitcher';
+import { usePageTitle, PAGE_SEO_DATA } from '../hooks/usePageTitle';
 
 const Login: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
   const [showPassword, setShowPassword] = useState(false);
+  
+  // SEO優化：設置頁面標題和描述
+  usePageTitle(PAGE_SEO_DATA.login);
   const [formData, setFormData] = useState({
     email: '',
     password: '',

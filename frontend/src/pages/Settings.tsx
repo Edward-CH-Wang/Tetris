@@ -27,6 +27,7 @@ import { toast } from 'sonner';
 import { cn } from '../lib/utils';
 import CloudSyncStatus from '../components/CloudSyncStatus';
 import { trackSettingsChange } from '../lib/analytics';
+import { usePageTitle, PAGE_SEO_DATA } from '../hooks/usePageTitle';
 
 interface GameSettings {
   // 音效設定
@@ -116,6 +117,9 @@ const Settings: React.FC = () => {
   const [settings, setSettings] = useState<GameSettings>(defaultSettings);
   const [isEditing, setIsEditing] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  
+  // SEO優化：設置頁面標題和描述
+  usePageTitle(PAGE_SEO_DATA.settings);
   const [profileData, setProfileData] = useState({
     name: '',
     email: '',

@@ -5,11 +5,15 @@ import { useUserStore } from '../store/userStore';
 import { Play, Users, Trophy, Settings, LogIn, UserPlus } from 'lucide-react';
 import { cn } from '../lib/utils';
 import LanguageSwitcher from '../components/LanguageSwitcher';
+import { usePageTitle, PAGE_SEO_DATA } from '../hooks/usePageTitle';
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { currentUser, isAuthenticated, loginWithGoogle, loginAsGuest } = useUserStore();
+  
+  // SEO優化：設置頁面標題和描述
+  usePageTitle(PAGE_SEO_DATA.home);
 
   const handleSinglePlayer = () => {
     navigate('/single-player');

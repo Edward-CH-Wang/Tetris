@@ -22,6 +22,7 @@ import {
 import { toast } from 'sonner';
 import { cn } from '../lib/utils';
 import { trackMultiplayerRoomJoin, trackMultiplayerRoomLeave, trackMultiplayerGameWin, trackMultiplayerGameLose, trackGameStart } from '../lib/analytics';
+import { usePageTitle, PAGE_SEO_DATA } from '../hooks/usePageTitle';
 
 const Multiplayer: React.FC = () => {
   const { t } = useTranslation();
@@ -29,6 +30,9 @@ const Multiplayer: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'quickMatch' | 'rooms'>('quickMatch');
   const [roomName, setRoomName] = useState('');
   const [showCreateRoom, setShowCreateRoom] = useState(false);
+  
+  // SEO優化：設置頁面標題和描述
+  usePageTitle(PAGE_SEO_DATA.multiplayer);
   
   const {
     socket,
