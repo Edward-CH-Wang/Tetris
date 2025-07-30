@@ -62,7 +62,13 @@
       "playing": "Playing",
       "paused": "Paused",
       "gameOver": "Game Over"
-    }
+    },
+    "touchControls": "Touch Controls",
+    "touchControlsDesc": "Use these buttons to control the game on touch devices",
+    "left": "Left",
+    "right": "Right",
+    "touchControlsTip1": "Tap buttons to control the falling blocks",
+    "touchControlsTip2": "Perfect for iPad and mobile devices"
   },
   "home": {
     "welcome": "Welcome to Blockfall",

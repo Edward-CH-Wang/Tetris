@@ -6,6 +6,7 @@ import { useUserStore } from '../store/userStore';
 import { useGameStore } from '../store/gameStore';
 import GameBoard from '../components/GameBoard';
 import GameInfo from '../components/GameInfo';
+import TouchControls from '../components/TouchControls';
 import { 
   ArrowLeft, 
   Home, 
@@ -528,19 +529,28 @@ const Multiplayer: React.FC = () => {
               
               {/* 雙人遊戲板 */}
               <div className="lg:col-span-2">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* 自己的遊戲板 */}
-                  <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-4 border border-gray-700">
-                    <h4 className="text-center text-white font-semibold mb-2">{t('multiplayer.you')}</h4>
-                    <GameBoard isMultiplayer={true} />
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* 自己的遊戲板 */}
+                    <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-4 border border-gray-700">
+                      <h4 className="text-center text-white font-semibold mb-2">{t('multiplayer.you')}</h4>
+                      <GameBoard isMultiplayer={true} />
+                    </div>
+                    
+                    {/* 對手的遊戲板 */}
+                    <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-4 border border-gray-700">
+                      <h4 className="text-center text-white font-semibold mb-2">
+                        {gameState.opponent?.user.name || t('multiplayer.opponent')}
+                      </h4>
+                      <GameBoard isMultiplayer={true} isOpponent={true} />
+                    </div>
                   </div>
                   
-                  {/* 對手的遊戲板 */}
-                  <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-4 border border-gray-700">
-                    <h4 className="text-center text-white font-semibold mb-2">
-                      {gameState.opponent?.user.name || t('multiplayer.opponent')}
-                    </h4>
-                    <GameBoard isMultiplayer={true} isOpponent={true} />
+                  {/* 觸控控制按鍵 */}
+                  <div className="w-full">
+                    <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-4 border border-gray-700">
+                      <TouchControls />
+                    </div>
                   </div>
                 </div>
               </div>

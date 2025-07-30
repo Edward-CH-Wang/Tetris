@@ -5,6 +5,7 @@ import { useGameStore } from '../store/gameStore';
 import { useUserStore } from '../store/userStore';
 import GameBoard from '../components/GameBoard';
 import GameInfo from '../components/GameInfo';
+import TouchControls from '../components/TouchControls';
 import { ArrowLeft, Home } from 'lucide-react';
 import { toast } from 'sonner';
 import { usePageTitle, PAGE_SEO_DATA } from '../hooks/usePageTitle';
@@ -140,9 +141,16 @@ const SinglePlayer: React.FC = () => {
             
             {/* 遊戲板 */}
             <div className="lg:col-span-2 order-1 lg:order-2">
-              <div className="flex justify-center">
+              <div className="flex flex-col items-center space-y-6">
                 <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-700">
                   <GameBoard />
+                </div>
+                
+                {/* 觸控控制按鍵 */}
+                <div className="w-full">
+                  <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-4 border border-gray-700">
+                    <TouchControls />
+                  </div>
                 </div>
               </div>
             </div>

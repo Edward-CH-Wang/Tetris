@@ -62,7 +62,13 @@
       "playing": "遊戲中",
       "paused": "暫停",
       "gameOver": "遊戲結束"
-    }
+    },
+    "touchControls": "觸控控制",
+    "touchControlsDesc": "使用這些按鍵在觸控設備上控制遊戲",
+    "left": "左移",
+    "right": "右移",
+    "touchControlsTip1": "點擊按鍵控制下落方塊",
+    "touchControlsTip2": "完美適配iPad和手機設備"
   },
   "home": {
     "title": "方塊墜落",
