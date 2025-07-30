@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useGameStore } from '../store/gameStore';
 import { 
@@ -23,6 +23,10 @@ const TouchControls: React.FC<TouchControlsProps> = ({ className }) => {
     hardDrop
   } = useGameStore();
 
+  // 使用ref來追蹤最後一次觸發的時間，防止重複觸發
+  const lastTriggerTime = useRef<number>(0);
+  const DEBOUNCE_TIME = 100; // 100ms防抖時間
+
   const handleMove = (direction: 'left' | 'right' | 'down') => {
     if (gameStatus !== 'playing') return;
     movePiece(direction);
@@ -38,21 +42,29 @@ const TouchControls: React.FC<TouchControlsProps> = ({ className }) => {
     hardDrop();
   };
 
-  // 處理觸控事件，防止雙重觸發
-  const handleTouchEvent = (e: React.TouchEvent, action: () => void) => {
-    e.preventDefault();
-    e.stopPropagation();
+  // 統一的事件處理器，使用時間戳防抖
+  const handleButtonAction = (action: () => void) => {
+    const now = Date.now();
+    if (now - lastTriggerTime.current < DEBOUNCE_TIME) {
+      return; // 在防抖時間內，忽略重複觸發
+    }
+    lastTriggerTime.current = now;
     action();
   };
 
-  // 處理點擊事件，只在非觸控設備上觸發
-  const handleClickEvent = (e: React.MouseEvent, action: () => void) => {
-    // 檢查是否為觸控設備生成的點擊事件
-    if (e.detail === 0) {
-      // detail為0表示這是由觸控事件生成的點擊，忽略它
-      return;
-    }
-    action();
+  // 觸控事件處理器
+  const handleTouchStart = (e: React.TouchEvent, action: () => void) => {
+    e.preventDefault();
+    e.stopPropagation();
+    handleButtonAction(action);
+  };
+
+  // 滑鼠事件處理器（僅用於桌面設備）
+  const handleMouseDown = (e: React.MouseEvent, action: () => void) => {
+    // 只處理滑鼠左鍵點擊
+    if (e.button !== 0) return;
+    e.preventDefault();
+    handleButtonAction(action);
   };
 
 
@@ -70,8 +82,8 @@ const TouchControls: React.FC<TouchControlsProps> = ({ className }) => {
         {/* 第一行：左移、旋轉、右移 */}
         <div className="grid grid-cols-3 gap-3">
           <button
-            onTouchStart={(e) => handleTouchEvent(e, () => handleMove('left'))}
-            onClick={(e) => handleClickEvent(e, () => handleMove('left'))}
+            onTouchStart={(e) => handleTouchStart(e, () => handleMove('left'))}
+            onMouseDown={(e) => handleMouseDown(e, () => handleMove('left'))}
             disabled={gameStatus === 'gameOver'}
             className={cn(
               buttonBaseClass,
@@ -87,8 +99,8 @@ const TouchControls: React.FC<TouchControlsProps> = ({ className }) => {
           </button>
 
           <button
-            onTouchStart={(e) => handleTouchEvent(e, handleRotate)}
-            onClick={(e) => handleClickEvent(e, handleRotate)}
+            onTouchStart={(e) => handleTouchStart(e, handleRotate)}
+            onMouseDown={(e) => handleMouseDown(e, handleRotate)}
             disabled={gameStatus === 'gameOver'}
             className={cn(
               buttonBaseClass,
@@ -104,8 +116,8 @@ const TouchControls: React.FC<TouchControlsProps> = ({ className }) => {
           </button>
 
           <button
-            onTouchStart={(e) => handleTouchEvent(e, () => handleMove('right'))}
-            onClick={(e) => handleClickEvent(e, () => handleMove('right'))}
+            onTouchStart={(e) => handleTouchStart(e, () => handleMove('right'))}
+            onMouseDown={(e) => handleMouseDown(e, () => handleMove('right'))}
             disabled={gameStatus === 'gameOver'}
             className={cn(
               buttonBaseClass,
@@ -124,36 +136,36 @@ const TouchControls: React.FC<TouchControlsProps> = ({ className }) => {
         {/* 第二行：軟降、硬降 */}
         <div className="grid grid-cols-2 gap-3">
           <button
-            onTouchStart={(e) => handleTouchEvent(e, () => handleMove('down'))}
-            onClick={(e) => handleClickEvent(e, () => handleMove('down'))}
+            onTouchStart={(e) => handleTouchStart(e, () => handleMove('down'))}
+            onMouseDown={(e) => handleMouseDown(e, () => handleMove('down'))}
             disabled={gameStatus === 'gameOver'}
             className={cn(
               buttonBaseClass,
               secondaryButtonClass,
-              'h-12',
+              'h-14 text-lg',
               {
                 'opacity-50 cursor-not-allowed': gameStatus === 'gameOver'
               }
             )}
           >
-            <ChevronDown className="w-5 h-5" />
+            <ChevronDown className="w-6 h-6" />
             <span className="ml-1 text-sm">{t('game.softDrop')}</span>
           </button>
 
           <button
-            onTouchStart={(e) => handleTouchEvent(e, handleHardDrop)}
-            onClick={(e) => handleClickEvent(e, handleHardDrop)}
+            onTouchStart={(e) => handleTouchStart(e, handleHardDrop)}
+            onMouseDown={(e) => handleMouseDown(e, handleHardDrop)}
             disabled={gameStatus === 'gameOver'}
             className={cn(
               buttonBaseClass,
-              dangerButtonClass,
-              'h-12',
+              'bg-red-600 hover:bg-red-700 text-white border-red-600',
+              'h-14 text-lg',
               {
                 'opacity-50 cursor-not-allowed': gameStatus === 'gameOver'
               }
             )}
           >
-            <ArrowDown className="w-5 h-5" />
+            <ArrowDown className="w-6 h-6" />
             <span className="ml-1 text-sm">{t('game.hardDrop')}</span>
           </button>
         </div>
