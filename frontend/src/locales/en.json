@@ -114,7 +114,15 @@
     "passwordTooShort": "Password must be at least 6 characters",
     "passwordMismatch": "Passwords do not match",
     "guestMode": "Guest Mode",
-    "loggedIn": "Logged In"
+    "loggedIn": "Logged In",
+    "name": "Name",
+    "fillAllFields": "Please fill in all required fields",
+    "enterEmail": "Enter your email",
+    "enterPassword": "Enter your password",
+    "enterName": "Enter your name",
+    "enterPasswordAgain": "Enter password again",
+    "googleLogin": "Sign in with Google",
+    "googleLoginBenefits": "Sign in with Google to enjoy full features including game records, leaderboards and achievements"
   },
   "stats": {
     "title": "Statistics",
@@ -425,7 +433,8 @@
     "synced": "Synced",
     "syncing": "Syncing",
     "syncFailed": "Sync Failed",
-    "guest": "Guest"
+    "guest": "Guest",
+    "or": "or"
   },
   "firebase": {
     "configNeeded": "Firebase Configuration Required",
