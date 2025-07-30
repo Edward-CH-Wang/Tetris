@@ -8,6 +8,7 @@ import {
   checkFirestoreConnection,
   FirestoreUser 
 } from '../lib/firestore';
+import { trackUserLogin, trackUserLogout, trackUserRegistration, trackGameEnd } from '../lib/analytics';
 
 export interface User {
   id: string;
@@ -288,6 +289,9 @@ export const useUserStore = create<UserState>()(persist(
         
         console.log('📧 Email 登入成功:', user);
         
+        // 追蹤登入事件
+        trackUserLogin('email');
+        
         // 初始化 Firestore 連接
         await get().initializeFirestore();
         
@@ -331,6 +335,9 @@ export const useUserStore = create<UserState>()(persist(
         });
         
         console.log('🔥 Google 登入成功:', user);
+        
+        // 追蹤登入事件
+        trackUserLogin('google');
         
         // 初始化 Firestore 連接
         await get().initializeFirestore();
@@ -376,6 +383,9 @@ export const useUserStore = create<UserState>()(persist(
         
         console.log('👤 註冊成功:', user);
         
+        // 追蹤註冊事件
+        trackUserRegistration('email');
+        
         // 初始化 Firestore 連接
         await get().initializeFirestore();
         
@@ -406,6 +416,11 @@ export const useUserStore = create<UserState>()(persist(
     logout: async () => {
       try {
         const { currentUser, isCloudSyncEnabled } = get();
+        
+        // 追蹤登出事件（在清除用戶資料前）
+        if (currentUser && !currentUser.isGuest) {
+          trackUserLogout();
+        }
         
         // 如果是 Firebase 用戶且啟用雲端同步，先同步數據到雲端
         if (currentUser && !currentUser.isGuest && isCloudSyncEnabled) {
@@ -559,6 +574,15 @@ export const useUserStore = create<UserState>()(persist(
       console.log('📋 [DEBUG] 更新後記錄數量:', updatedRecords.length);
       
       set({ gameRecords: updatedRecords });
+      
+      // 追蹤遊戲結束事件
+      trackGameEnd(
+        newRecord.gameType,
+        newRecord.score,
+        newRecord.level,
+        newRecord.lines,
+        newRecord.duration * 1000 // 轉換為毫秒
+      );
       
       // 驗證數據是否正確保存
       const { gameRecords: savedRecords } = get();

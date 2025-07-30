@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { leaderboardService } from '../lib/leaderboard';
+import { trackGameStart, trackGamePause, trackGameResume, trackGameEnd } from '../lib/analytics';
 
 // 方塊墜落形狀定義
 export const BLOCKFALL_SHAPES = {
@@ -196,16 +197,25 @@ export const useGameStore = create<GameStore>((set, get) => ({
       gameStatus: 'playing',
       gameStartTime: new Date()
     });
+    
+    // 追蹤遊戲開始事件
+    trackGameStart('single');
   },
 
   // 暫停遊戲
   pauseGame: () => {
     set({ gameStatus: 'paused' });
+    
+    // 追蹤遊戲暫停事件
+    trackGamePause('single');
   },
 
   // 恢復遊戲
   resumeGame: () => {
     set({ gameStatus: 'playing' });
+    
+    // 追蹤遊戲恢復事件
+    trackGameResume('single');
   },
 
   // 結束遊戲
@@ -223,6 +233,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
     // 計算遊戲時長
     const duration = gameStartTime ? Math.floor((Date.now() - gameStartTime.getTime()) / 1000) : 0;
     console.log('⏱️ [DEBUG] 遊戲時長:', duration, '秒');
+    
+    // 追蹤遊戲結束事件
+    trackGameEnd('single', score, level, lines, duration * 1000);
     
     // 嘗試更新排行榜和添加遊戲記錄（如果用戶已登入）
     try {

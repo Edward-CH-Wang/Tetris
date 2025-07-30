@@ -26,6 +26,7 @@ import {
 import { toast } from 'sonner';
 import { cn } from '../lib/utils';
 import CloudSyncStatus from '../components/CloudSyncStatus';
+import { trackSettingsChange } from '../lib/analytics';
 
 interface GameSettings {
   // 音效設定
@@ -213,6 +214,7 @@ const Settings: React.FC = () => {
   const handleSaveSettings = () => {
     try {
       localStorage.setItem('blockfall-settings', JSON.stringify(settings));
+      trackSettingsChange(activeTab, settings);
       setHasChanges(false);
       toast.success('設定已保存');
     } catch (err) {

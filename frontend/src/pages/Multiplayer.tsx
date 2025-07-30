@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '../lib/utils';
+import { trackMultiplayerRoomJoin, trackMultiplayerRoomLeave, trackMultiplayerGameWin, trackMultiplayerGameLose, trackGameStart } from '../lib/analytics';
 
 const Multiplayer: React.FC = () => {
   const { t } = useTranslation();
@@ -102,6 +103,7 @@ const Multiplayer: React.FC = () => {
     if (gameStatus === 'gameOver' && gameState.room && currentUser) {
       const isWinner = gameState.winner?.id === currentUser.id;
       const estimatedDuration = Math.floor(score / 100) * 30;
+      const opponentCount = gameState.room.players ? gameState.room.players.length - 1 : 1;
       
       addGameRecord({
         gameType: 'multiplayer',
@@ -112,6 +114,13 @@ const Multiplayer: React.FC = () => {
         result: isWinner ? 'win' : 'lose',
         opponentId: gameState.opponent?.id
       });
+      
+      // 追蹤多人遊戲結果
+      if (isWinner) {
+        trackMultiplayerGameWin(gameState.room.id, opponentCount);
+      } else {
+        trackMultiplayerGameLose(gameState.room.id, opponentCount);
+      }
       
       toast.success(
         isWinner ? t('multiplayer.congratulations') : t('multiplayer.gameOver'),
@@ -154,9 +163,13 @@ const Multiplayer: React.FC = () => {
 
   const handleJoinRoom = (roomId: string) => {
     joinRoom(roomId);
+    trackMultiplayerRoomJoin(roomId);
   };
 
   const handleLeaveRoom = () => {
+    if (gameState.room) {
+      trackMultiplayerRoomLeave(gameState.room.id);
+    }
     leaveRoom();
     resetMultiplayerState();
   };

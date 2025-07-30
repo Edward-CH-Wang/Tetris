@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChevronDown, Globe } from 'lucide-react';
 import { supportedLanguages } from '../lib/i18n';
+import { trackLanguageChange } from '../lib/analytics';
 
 const LanguageSwitcher: React.FC = () => {
   const { i18n } = useTranslation();
@@ -10,7 +11,9 @@ const LanguageSwitcher: React.FC = () => {
   const currentLanguage = supportedLanguages.find(lang => lang.code === i18n.language) || supportedLanguages[0];
 
   const handleLanguageChange = (languageCode: string) => {
+    const previousLanguage = i18n.language;
     i18n.changeLanguage(languageCode);
+    trackLanguageChange(previousLanguage, languageCode);
     setIsOpen(false);
   };
 

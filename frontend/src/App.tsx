@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import { useFirebaseAuth } from './hooks/useFirebaseAuth';
 import { useUserStore } from './store/userStore';
 import FirebaseConfigWarning from './components/FirebaseConfigWarning';
+import { trackPageView } from './lib/analytics';
 
 // Pages
 import Home from './pages/Home';
@@ -13,6 +14,18 @@ import Login from './pages/Login';
 import Stats from './pages/Stats';
 import Leaderboard from './pages/Leaderboard';
 import Settings from './pages/Settings';
+
+// 頁面追蹤組件
+function PageTracker() {
+  const location = useLocation();
+  
+  useEffect(() => {
+    // 追蹤頁面瀏覽
+    trackPageView(location.pathname);
+  }, [location]);
+  
+  return null;
+}
 
 function App() {
   // 初始化 Firebase 認證監聽
@@ -49,6 +62,9 @@ function App() {
   return (
     <Router>
       <div className="App">
+        {/* 頁面追蹤 */}
+        <PageTracker />
+        
         {/* Firebase 配置警告 */}
         <FirebaseConfigWarning 
           isVisible={showFirebaseWarning}
