@@ -38,6 +38,23 @@ const TouchControls: React.FC<TouchControlsProps> = ({ className }) => {
     hardDrop();
   };
 
+  // 處理觸控事件，防止雙重觸發
+  const handleTouchEvent = (e: React.TouchEvent, action: () => void) => {
+    e.preventDefault();
+    e.stopPropagation();
+    action();
+  };
+
+  // 處理點擊事件，只在非觸控設備上觸發
+  const handleClickEvent = (e: React.MouseEvent, action: () => void) => {
+    // 檢查是否為觸控設備生成的點擊事件
+    if (e.detail === 0) {
+      // detail為0表示這是由觸控事件生成的點擊，忽略它
+      return;
+    }
+    action();
+  };
+
 
 
   const buttonBaseClass = "flex items-center justify-center rounded-lg font-medium transition-all duration-150 active:scale-95 select-none";
@@ -53,11 +70,8 @@ const TouchControls: React.FC<TouchControlsProps> = ({ className }) => {
         {/* 第一行：左移、旋轉、右移 */}
         <div className="grid grid-cols-3 gap-3">
           <button
-            onTouchStart={(e) => {
-              e.preventDefault();
-              handleMove('left');
-            }}
-            onClick={() => handleMove('left')}
+            onTouchStart={(e) => handleTouchEvent(e, () => handleMove('left'))}
+            onClick={(e) => handleClickEvent(e, () => handleMove('left'))}
             disabled={gameStatus === 'gameOver'}
             className={cn(
               buttonBaseClass,
@@ -73,11 +87,8 @@ const TouchControls: React.FC<TouchControlsProps> = ({ className }) => {
           </button>
 
           <button
-            onTouchStart={(e) => {
-              e.preventDefault();
-              handleRotate();
-            }}
-            onClick={handleRotate}
+            onTouchStart={(e) => handleTouchEvent(e, handleRotate)}
+            onClick={(e) => handleClickEvent(e, handleRotate)}
             disabled={gameStatus === 'gameOver'}
             className={cn(
               buttonBaseClass,
@@ -93,11 +104,8 @@ const TouchControls: React.FC<TouchControlsProps> = ({ className }) => {
           </button>
 
           <button
-            onTouchStart={(e) => {
-              e.preventDefault();
-              handleMove('right');
-            }}
-            onClick={() => handleMove('right')}
+            onTouchStart={(e) => handleTouchEvent(e, () => handleMove('right'))}
+            onClick={(e) => handleClickEvent(e, () => handleMove('right'))}
             disabled={gameStatus === 'gameOver'}
             className={cn(
               buttonBaseClass,
@@ -116,11 +124,8 @@ const TouchControls: React.FC<TouchControlsProps> = ({ className }) => {
         {/* 第二行：軟降、硬降 */}
         <div className="grid grid-cols-2 gap-3">
           <button
-            onTouchStart={(e) => {
-              e.preventDefault();
-              handleMove('down');
-            }}
-            onClick={() => handleMove('down')}
+            onTouchStart={(e) => handleTouchEvent(e, () => handleMove('down'))}
+            onClick={(e) => handleClickEvent(e, () => handleMove('down'))}
             disabled={gameStatus === 'gameOver'}
             className={cn(
               buttonBaseClass,
@@ -136,11 +141,8 @@ const TouchControls: React.FC<TouchControlsProps> = ({ className }) => {
           </button>
 
           <button
-            onTouchStart={(e) => {
-              e.preventDefault();
-              handleHardDrop();
-            }}
-            onClick={handleHardDrop}
+            onTouchStart={(e) => handleTouchEvent(e, handleHardDrop)}
+            onClick={(e) => handleClickEvent(e, handleHardDrop)}
             disabled={gameStatus === 'gameOver'}
             className={cn(
               buttonBaseClass,
