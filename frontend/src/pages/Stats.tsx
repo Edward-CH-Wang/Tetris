@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useUserStore } from '../store/userStore';
-import { toIsoSafe } from '../utils/timestamps';
+import { toIsoSafe, toMsSafe } from '../utils/timestamps';
 import { 
   ArrowLeft, 
   Home, 
@@ -437,7 +437,7 @@ const Stats: React.FC = () => {
 
   // 渲染遊戲歷史
   const renderHistory = () => {
-    const sortedRecords = [...gameRecords].sort((a, b) => b.playedAt.getTime() - a.playedAt.getTime());
+    const sortedRecords = [...gameRecords].sort((a, b) => toMsSafe(b.playedAt) - toMsSafe(a.playedAt));
     
     return (
       <div className="space-y-6">

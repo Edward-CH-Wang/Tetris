@@ -16,6 +16,11 @@ export function toIsoSafe(v: any): string {
   return isNaN(d.getTime()) ? '' : d.toISOString();
 }
 
+export function toMsSafe(v: any): number {
+  const d = toDateSafe(v);
+  return isNaN(d.getTime()) ? 0 : d.getTime();
+}
+
 // Recursively convert all Timestamp fields inside an object to Date
 export function fixTimestamps<T>(obj: T): T {
   if (obj == null) return obj;

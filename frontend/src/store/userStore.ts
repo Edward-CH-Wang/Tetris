@@ -9,6 +9,7 @@ import {
   FirestoreUser 
 } from '../lib/firestore';
 import { trackUserLogin, trackUserLogout, trackUserRegistration, trackGameEnd } from '../lib/analytics';
+import { toMsSafe, fixTimestamps } from '../utils/timestamps';
 
 export interface User {
   id: string;
@@ -556,7 +557,7 @@ export const useUserStore = create<UserState>()(persist(
 
       // 檢查是否已存在相同的記錄（基於時間戳和分數去重）
       const isDuplicate = gameRecords.some(record => 
-        Math.abs(record.playedAt.getTime() - newRecord.playedAt.getTime()) < 1000 && // 1秒內
+        Math.abs(toMsSafe(record.playedAt) - toMsSafe(newRecord.playedAt)) < 1000 && // 1秒內
         record.score === newRecord.score &&
         record.level === newRecord.level &&
         record.lines === newRecord.lines
@@ -568,7 +569,7 @@ export const useUserStore = create<UserState>()(persist(
       }
 
       const updatedRecords = [newRecord, ...gameRecords]
-        .sort((a, b) => b.playedAt.getTime() - a.playedAt.getTime()) // 按時間排序
+        .sort((a, b) => toMsSafe(b.playedAt) - toMsSafe(a.playedAt)) // 按時間排序
         .slice(0, 100); // 保留最近100條記錄
       
       console.log('📋 [DEBUG] 更新後記錄數量:', updatedRecords.length);
@@ -690,7 +691,7 @@ export const useUserStore = create<UserState>()(persist(
       const winRate = totalGames > 0 ? Math.round((totalWins / totalGames) * 100) : 0;
       
       // 計算連勝（按時間排序）
-      const sortedRecords = [...validRecords].sort((a, b) => b.playedAt.getTime() - a.playedAt.getTime());
+      const sortedRecords = [...validRecords].sort((a, b) => toMsSafe(b.playedAt) - toMsSafe(a.playedAt));
       let currentStreak = 0;
       let bestStreak = 0;
       let tempStreak = 0;
@@ -1110,12 +1111,12 @@ export const useUserStore = create<UserState>()(persist(
           finalGameRecords = allRecords.filter((record, index, arr) => {
             return arr.findIndex(r => 
               r.id === record.id || 
-              (Math.abs(r.playedAt.getTime() - record.playedAt.getTime()) < 1000 &&
+              (Math.abs(toMsSafe(r.playedAt) - toMsSafe(record.playedAt)) < 1000 &&
                r.score === record.score &&
                r.level === record.level &&
                r.lines === record.lines)
             ) === index;
-          }).sort((a, b) => b.playedAt.getTime() - a.playedAt.getTime()).slice(0, 100);
+          }).sort((a, b) => toMsSafe(b.playedAt) - toMsSafe(a.playedAt)).slice(0, 100);
           
           // 合併成就，保留最佳進度
           finalAchievements = DEFAULT_ACHIEVEMENTS.map(defaultAchievement => {
@@ -1241,12 +1242,12 @@ export const useUserStore = create<UserState>()(persist(
           const uniqueRecords = allRecords.filter((record, index, arr) => {
             return arr.findIndex(r => 
               r.id === record.id || 
-              (Math.abs(r.playedAt.getTime() - record.playedAt.getTime()) < 1000 &&
+              (Math.abs(toMsSafe(r.playedAt) - toMsSafe(record.playedAt)) < 1000 &&
                r.score === record.score &&
                r.level === record.level &&
                r.lines === record.lines)
             ) === index;
-          }).sort((a, b) => b.playedAt.getTime() - a.playedAt.getTime()).slice(0, 100);
+          }).sort((a, b) => toMsSafe(b.playedAt) - toMsSafe(a.playedAt)).slice(0, 100);
           
           console.log('📝 [DEBUG] 合併後遊戲記錄:', {
             local: localRecords.length,

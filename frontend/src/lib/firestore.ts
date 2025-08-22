@@ -15,7 +15,7 @@ import {
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { GameRecord, UserStats, Achievement } from '../store/userStore';
-import { fixTimestamps } from '../utils/timestamps';
+import { fixTimestamps, toMsSafe } from '../utils/timestamps';
 
 // Firestore 集合名稱
 const COLLECTIONS = {
@@ -122,7 +122,7 @@ export const firestoreGameRecordService = {
       
       // 在客戶端進行排序和限制
       const sortedRecords = records
-        .sort((a, b) => b.playedAt.getTime() - a.playedAt.getTime())
+        .sort((a, b) => toMsSafe(b.playedAt) - toMsSafe(a.playedAt))
         .slice(0, limitCount);
       
       console.log('✅ [DEBUG] 遊戲記錄查詢成功:', { 
@@ -158,7 +158,7 @@ export const firestoreGameRecordService = {
         
         // 客戶端排序
         const sortedRecords = records
-          .sort((a, b) => b.playedAt.getTime() - a.playedAt.getTime())
+          .sort((a, b) => toMsSafe(b.playedAt) - toMsSafe(a.playedAt))
           .slice(0, limitCount);
         
         console.log('✅ [DEBUG] 降級查詢成功:', { 

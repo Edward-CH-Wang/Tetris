@@ -2,6 +2,7 @@ import React from 'react';
 import { Cloud, CloudOff, Wifi, WifiOff, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { useUserStore } from '../store/userStore';
 import { useTranslation } from 'react-i18next';
+import { toMsSafe } from '../utils/timestamps';
 
 interface CloudSyncStatusProps {
   className?: string;
@@ -50,7 +51,7 @@ const CloudSyncStatus: React.FC<CloudSyncStatusProps> = ({
     if (!time) return t('cloudSync.neverSynced');
     
     const now = new Date();
-    const diff = now.getTime() - time.getTime();
+    const diff = toMsSafe(now) - toMsSafe(time);
     const minutes = Math.floor(diff / 60000);
     
     if (minutes < 1) return t('cloudSync.justSynced');
