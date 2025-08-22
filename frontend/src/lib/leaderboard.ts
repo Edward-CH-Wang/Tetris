@@ -11,6 +11,7 @@ import {
   writeBatch
 } from 'firebase/firestore';
 import { db } from './firebase';
+import { fixTimestamps } from '../utils/timestamps';
 
 // 排行榜條目接口
 export interface LeaderboardEntry {
@@ -67,7 +68,7 @@ export const leaderboardService = {
         const entries: LeaderboardEntry[] = [];
         
         querySnapshot.forEach((doc) => {
-          const data = doc.data();
+          const data = fixTimestamps(doc.data());
           const totalGames = (data.wins || 0) + (data.losses || 0);
           const entry: LeaderboardEntry = {
             id: doc.id,
@@ -85,8 +86,8 @@ export const leaderboardService = {
             rank: entries.length + 1,
             gameType: data.gameType || gameType,
             category: data.category || category,
-            createdAt: data.createdAt?.toDate() || new Date(),
-            updatedAt: data.updatedAt?.toDate() || new Date()
+            createdAt: data.createdAt || new Date(),
+            updatedAt: data.updatedAt || new Date()
           };
           entries.push(entry);
         });
@@ -107,7 +108,7 @@ export const leaderboardService = {
         const entries: LeaderboardEntry[] = [];
         
         querySnapshot.forEach((doc) => {
-          const data = doc.data();
+          const data = fixTimestamps(doc.data());
           const totalGames = (data.wins || 0) + (data.losses || 0);
           const entry: LeaderboardEntry = {
             id: doc.id,
@@ -125,8 +126,8 @@ export const leaderboardService = {
             rank: 0, // 將在排序後設置
             gameType: data.gameType || gameType,
             category: data.category || category,
-            createdAt: data.createdAt?.toDate() || new Date(),
-            updatedAt: data.updatedAt?.toDate() || new Date()
+            createdAt: data.createdAt || new Date(),
+            updatedAt: data.updatedAt || new Date()
           };
           entries.push(entry);
         });
@@ -162,7 +163,7 @@ export const leaderboardService = {
         const entries: LeaderboardEntry[] = [];
         
         querySnapshot.forEach((doc) => {
-          const data = doc.data();
+          const data = fixTimestamps(doc.data());
           if (data.category === category) {
             const totalGames = (data.wins || 0) + (data.losses || 0);
             const entry: LeaderboardEntry = {
@@ -181,8 +182,8 @@ export const leaderboardService = {
               rank: 0,
               gameType: data.gameType || gameType,
               category: data.category || category,
-              createdAt: data.createdAt?.toDate() || new Date(),
-              updatedAt: data.updatedAt?.toDate() || new Date()
+              createdAt: data.createdAt || new Date(),
+              updatedAt: data.updatedAt || new Date()
             };
             entries.push(entry);
           }
@@ -256,7 +257,7 @@ export const leaderboardService = {
       };
       
       if (userBestSnap.exists()) {
-        const data = userBestSnap.data();
+        const data = fixTimestamps(userBestSnap.data());
         currentBest = {
           score: data.score || 0,
           level: data.level || 0,
@@ -361,7 +362,7 @@ export const leaderboardService = {
             gameType: gameData.gameType,
             category,
             [category]: value,
-            createdAt: userBestSnap.exists() ? userBestSnap.data()?.createdAt || now : now,
+            createdAt: userBestSnap.exists() ? fixTimestamps(userBestSnap.data())?.createdAt || now : now,
             updatedAt: now
           };
           
@@ -402,7 +403,7 @@ export const leaderboardService = {
         return null;
       }
       
-      const userData = userDoc.data();
+      const userData = fixTimestamps(userDoc.data());
       const userValue = userData[category] || 0;
       
       // 查詢比用戶成績更好的記錄數量
@@ -442,7 +443,7 @@ export const leaderboardService = {
       const entries: LeaderboardEntry[] = [];
       
       querySnapshot.forEach((doc) => {
-        const data = doc.data();
+        const data = fixTimestamps(doc.data());
         // 客戶端過濾（Firestore 不支持複雜的文本搜索）
         if (data.name && data.name.toLowerCase().includes(searchTerm.toLowerCase())) {
           const totalGames = (data.wins || 0) + (data.losses || 0);
@@ -462,8 +463,8 @@ export const leaderboardService = {
             rank: entries.length + 1,
             gameType: data.gameType || gameType,
             category: data.category || category,
-            createdAt: data.createdAt?.toDate() || new Date(),
-            updatedAt: data.updatedAt?.toDate() || new Date()
+            createdAt: data.createdAt || new Date(),
+            updatedAt: data.updatedAt || new Date()
           };
           entries.push(entry);
         }

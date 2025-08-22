@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useUserStore } from '../store/userStore';
+import { toIsoSafe } from '../utils/timestamps';
 import { 
   ArrowLeft, 
   Home, 
@@ -71,12 +72,12 @@ const Stats: React.FC = () => {
     const last7Days = Array.from({ length: 7 }, (_, i) => {
       const date = new Date();
       date.setDate(date.getDate() - (6 - i));
-      return date.toISOString().split('T')[0];
+      return toIsoSafe(date).split('T')[0];
     });
     
     const scoreData = last7Days.map(date => {
       const dayRecords = gameRecords.filter(record => 
-        record.playedAt.toISOString().split('T')[0] === date
+        toIsoSafe(record.playedAt).split('T')[0] === date
       );
       const avgScore = dayRecords.length > 0 
         ? Math.round(dayRecords.reduce((sum, record) => sum + record.score, 0) / dayRecords.length)

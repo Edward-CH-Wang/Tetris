@@ -15,6 +15,7 @@ import {
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { GameRecord, UserStats, Achievement } from '../store/userStore';
+import { fixTimestamps } from '../utils/timestamps';
 
 // Firestore 集合名稱
 const COLLECTIONS = {
@@ -58,11 +59,11 @@ export const firestoreUserService = {
       const userSnap = await getDoc(userRef);
       
       if (userSnap.exists()) {
-        const data = userSnap.data();
+        const data = fixTimestamps(userSnap.data());
         return {
           ...data,
-          createdAt: data.createdAt?.toDate() || new Date(),
-          lastLoginAt: data.lastLoginAt?.toDate() || new Date()
+          createdAt: data.createdAt || new Date(),
+          lastLoginAt: data.lastLoginAt || new Date()
         } as FirestoreUser;
       }
       return null;
@@ -110,12 +111,12 @@ export const firestoreGameRecordService = {
       const records: GameRecord[] = [];
       
       querySnapshot.forEach((doc) => {
-        const data = doc.data();
+        const data = fixTimestamps(doc.data());
         records.push({
           id: doc.id,
           ...data,
-          createdAt: data.createdAt?.toDate() || new Date(),
-          playedAt: data.playedAt?.toDate() || new Date()
+          createdAt: data.createdAt || new Date(),
+          playedAt: data.playedAt || new Date()
         } as GameRecord);
       });
       
@@ -146,12 +147,12 @@ export const firestoreGameRecordService = {
         const records: GameRecord[] = [];
         
         querySnapshot.forEach((doc) => {
-          const data = doc.data();
+          const data = fixTimestamps(doc.data());
           records.push({
             id: doc.id,
             ...data,
-            createdAt: data.createdAt?.toDate() || new Date(),
-            playedAt: data.playedAt?.toDate() || new Date()
+            createdAt: data.createdAt || new Date(),
+            playedAt: data.playedAt || new Date()
           } as GameRecord);
         });
         
@@ -216,7 +217,7 @@ export const firestoreUserStatsService = {
       const statsSnap = await getDoc(statsRef);
       
       if (statsSnap.exists()) {
-        const data = statsSnap.data();
+        const data = fixTimestamps(statsSnap.data());
         return {
           totalGames: data.totalGames || 0,
           totalWins: data.totalWins || 0,
@@ -260,10 +261,10 @@ export const firestoreAchievementService = {
       const achievementsSnap = await getDoc(achievementsRef);
       
       if (achievementsSnap.exists()) {
-        const data = achievementsSnap.data();
+        const data = fixTimestamps(achievementsSnap.data());
         return data.achievements?.map((achievement: any) => ({
           ...achievement,
-          unlockedAt: achievement.unlockedAt?.toDate() || null
+          unlockedAt: achievement.unlockedAt || null
         })) || [];
       }
       return [];
