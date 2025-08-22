@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useUserStore } from '../store/userStore';
-import { toIsoSafe, toMsSafe } from '../utils/timestamps';
+import { toIsoSafe, toMsSafe, toDateSafe } from '../utils/timestamps';
 import { 
   ArrowLeft, 
   Home, 
@@ -117,8 +117,9 @@ const Stats: React.FC = () => {
     }
   };
 
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString('zh-TW', {
+  const formatDate = (date: any) => {
+    const safeDate = toDateSafe(date);
+    return safeDate.toLocaleDateString('zh-TW', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
